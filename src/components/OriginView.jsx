@@ -3,6 +3,8 @@ import { MapPin, MessageCircle, QrCode, Calculator } from 'lucide-react';
 
 export default function OriginView({ site, origin, onNavigate, onOpenQr }) {
   const o = origin || {};
+  const faqs = Array.isArray(o.faqs) ? o.faqs : [];
+
   return (
     <section id="view-origen" className="view-page active" data-view="origen">
       <div className="section section-dark">
@@ -72,22 +74,12 @@ export default function OriginView({ site, origin, onNavigate, onOpenQr }) {
           </div>
 
           <div className="faq-list" style={{ marginBottom: '40px' }}>
-            <details className="faq-item" open>
-              <summary>¿Puedo combinar Ecocaff con mi fertilización tradicional?</summary>
-              <p>Sí. Puedes usar Ecocaff como reemplazo 100% orgánico o en manejo integrado (transición), combinando la dosis orgánica con una fracción reducida de fertilizante químico mientras el suelo recupera su actividad biológica.</p>
-            </details>
-            <details className="faq-item">
-              <summary>¿Sirve para otros cultivos además del café?</summary>
-              <p>Sí, aunque la dosificación principal está calibrada para café en Algeciras, su base de Bocashi y biolixiviado también beneficia frutales y cultivos de pancoger de la región. Para cultivos distintos al café se recomienda ajustar según análisis de suelo.</p>
-            </details>
-            <details className="faq-item">
-              <summary>¿Por qué la presentación sólida viene en bultos de 25 kg?</summary>
-              <p>Porque 25 kg es un peso ergonómico diseñado pensando en la salud del trabajador rural y en el transporte por caminos y laderas empinadas, rindiendo exactamente para unos 8 árboles adultos.</p>
-            </details>
-            <details className="faq-item">
-              <summary>¿Cómo puedo ser punto de venta o aliado comercial en Algeciras?</summary>
-              <p>Si tienes un almacén de insumos agrícolas o deseas hacer un pedido directo para tu finca o vereda, escríbenos por WhatsApp para coordinar precios de distribuidor, entregas y muestras demostrativas.</p>
-            </details>
+            {faqs.map((item, idx) => (
+              <details key={idx} className="faq-item" open={idx === 0}>
+                <summary>{item.q}</summary>
+                <p>{item.a}</p>
+              </details>
+            ))}
           </div>
 
           <div

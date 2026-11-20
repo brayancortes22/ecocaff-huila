@@ -1,22 +1,13 @@
 import React, { useState } from 'react';
-import {
-  BookOpen,
-  Package,
-  Droplets,
-  Calendar,
-  Scale,
-  Mountain,
-  ShieldCheck,
-  FlaskConical,
-  Sprout,
-  Sun,
-  Check,
-  X
-} from 'lucide-react';
+import { BookOpen, Package, Droplets, Check, X } from 'lucide-react';
 
 export default function GuideView({ guide }) {
   const [tab, setTab] = useState('solido');
   const g = guide || {};
+  const solidSteps = Array.isArray(g.solidSteps) ? g.solidSteps : [];
+  const liquidSteps = Array.isArray(g.liquidSteps) ? g.liquidSteps : [];
+  const checklist = Array.isArray(g.checklist) ? g.checklist : [];
+  const currentSteps = tab === 'solido' ? solidSteps : liquidSteps;
 
   return (
     <section id="view-guia" className="view-page active" data-view="guia">
@@ -38,7 +29,7 @@ export default function GuideView({ guide }) {
               className={`guide-tab-btn ${tab === 'solido' ? 'active' : ''}`}
               role="tab"
               aria-selected={tab === 'solido'}
-              aria-controls="panel-guide-solido"
+              aria-controls="panel-guide-steps"
               onClick={() => setTab('solido')}
             >
               <Package size={16} aria-hidden="true" />
@@ -50,7 +41,7 @@ export default function GuideView({ guide }) {
               className={`guide-tab-btn ${tab === 'liquido' ? 'active' : ''}`}
               role="tab"
               aria-selected={tab === 'liquido'}
-              aria-controls="panel-guide-liquido"
+              aria-controls="panel-guide-steps"
               onClick={() => setTab('liquido')}
             >
               <Droplets size={16} aria-hidden="true" />
@@ -58,69 +49,22 @@ export default function GuideView({ guide }) {
             </button>
           </div>
 
-          {tab === 'solido' ? (
-            <div id="panel-guide-solido" role="tabpanel" aria-labelledby="tab-guide-solido" className="steps-grid">
-              <article className="step-card">
+          <div
+            id="panel-guide-steps"
+            role="tabpanel"
+            aria-labelledby={tab === 'solido' ? 'tab-guide-solido' : 'tab-guide-liquido'}
+            className="steps-grid"
+          >
+            {currentSteps.map((step, idx) => (
+              <article key={idx} className="step-card">
                 <div className="step-icon" aria-hidden="true">
-                  <Calendar size={20} />
+                  <strong style={{ fontSize: '0.95rem' }}>{idx + 1}</strong>
                 </div>
-                <h3>1. Elige el momento clave</h3>
-                <p>{g.solidStep1}</p>
+                <h3>{idx + 1}. {step.title}</h3>
+                <p>{step.text}</p>
               </article>
-              <article className="step-card">
-                <div className="step-icon" aria-hidden="true">
-                  <Scale size={20} />
-                </div>
-                <h3>2. Mide la dosis por árbol</h3>
-                <p>{g.solidStep2}</p>
-              </article>
-              <article className="step-card">
-                <div className="step-icon" aria-hidden="true">
-                  <Mountain size={20} />
-                </div>
-                <h3>3. Media luna en zona de gotera</h3>
-                <p>{g.solidStep3}</p>
-              </article>
-              <article className="step-card">
-                <div className="step-icon" aria-hidden="true">
-                  <ShieldCheck size={20} />
-                </div>
-                <h3>4. Guarda el bulto bajo techo</h3>
-                <p>{g.solidStep4}</p>
-              </article>
-            </div>
-          ) : (
-            <div id="panel-guide-liquido" role="tabpanel" aria-labelledby="tab-guide-liquido" className="steps-grid">
-              <article className="step-card">
-                <div className="step-icon" aria-hidden="true">
-                  <FlaskConical size={20} />
-                </div>
-                <h3>1. Agita y mide en la ranura</h3>
-                <p>{g.liquidStep1}</p>
-              </article>
-              <article className="step-card">
-                <div className="step-icon" aria-hidden="true">
-                  <Droplets size={20} />
-                </div>
-                <h3>2. Diluye en bomba de 20 L</h3>
-                <p>{g.liquidStep2}</p>
-              </article>
-              <article className="step-card">
-                <div className="step-icon" aria-hidden="true">
-                  <Sprout size={20} />
-                </div>
-                <h3>3. Aplica foliar o en drench</h3>
-                <p>{g.liquidStep3}</p>
-              </article>
-              <article className="step-card">
-                <div className="step-icon" aria-hidden="true">
-                  <Sun size={20} />
-                </div>
-                <h3>4. Cierra bien y protege del sol</h3>
-                <p>{g.liquidStep4}</p>
-              </article>
-            </div>
-          )}
+            ))}
+          </div>
 
           <div className="guide-extra-grid">
             <div className="diagram-card">
@@ -147,22 +91,16 @@ export default function GuideView({ guide }) {
             <div className="checklist-card">
               <h3>Recomendaciones clave en finca</h3>
               <ul className="check-list">
-                <li>
-                  <span className="badge-ok" aria-hidden="true"><Check size={16} strokeWidth={2.5} /></span>
-                  <span><strong>SÍ:</strong> Aplica cuando el suelo tenga buena humedad (inicio de lluvias) para activar la vida del suelo.</span>
-                </li>
-                <li>
-                  <span className="badge-ok" aria-hidden="true"><Check size={16} strokeWidth={2.5} /></span>
-                  <span><strong>SÍ:</strong> Tapa ligeramente el abono sólido con tierra u hojarasca en laderas para evitar que el agua lo arrastre.</span>
-                </li>
-                <li>
-                  <span className="badge-no" aria-hidden="true"><X size={16} strokeWidth={2.5} /></span>
-                  <span><strong>NO:</strong> No pegues el abono directamente al tallo del cafeto; siempre respeta la zona de gotera (10–15 cm).</span>
-                </li>
-                <li>
-                  <span className="badge-no" aria-hidden="true"><X size={16} strokeWidth={2.5} /></span>
-                  <span><strong>NO:</strong> No apliques el bioestimulante foliar a pleno sol del mediodía; hazlo en horas frescas de la mañana o tarde.</span>
-                </li>
+                {checklist.map((item, idx) => (
+                  <li key={idx}>
+                    {item.type === 'ok' ? (
+                      <span className="badge-ok" aria-hidden="true"><Check size={16} strokeWidth={2.5} /></span>
+                    ) : (
+                      <span className="badge-no" aria-hidden="true"><X size={16} strokeWidth={2.5} /></span>
+                    )}
+                    <span><strong>{item.type === 'ok' ? 'SÍ:' : 'NO:'}</strong> {item.text}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

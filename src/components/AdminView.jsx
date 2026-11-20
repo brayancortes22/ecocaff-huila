@@ -13,7 +13,11 @@ import {
   Calculator,
   Package,
   BookOpen,
-  MapPin
+  MapPin,
+  Eye,
+  EyeOff,
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 function compressImageFile(file, maxWidth = 900) {
@@ -43,11 +47,12 @@ const ADMIN_TABS = [
   { id: 'calculadora', label: '2. Calculadora', Icon: Calculator },
   { id: 'productos', label: '3. Productos', Icon: Package },
   { id: 'guia', label: '4. Guía de Uso', Icon: BookOpen },
-  { id: 'origen', label: '5. Origen y Contacto', Icon: MapPin }
+  { id: 'origen', label: '5. Origen y FAQ', Icon: MapPin }
 ];
 
 export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNavigate }) {
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('productos');
@@ -64,7 +69,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
       const res = await fetch('/api/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'login', password })
+        body: JSON.stringify({ action: 'login', password: password.trim() })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -89,17 +94,139 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
     }));
   };
 
-  const handleFileUpload = async (section, field, e) => {
+  const handleFileUpload = async (onDataUrl, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setErrorMsg('');
     try {
       const dataUrl = await compressImageFile(file);
-      handleField(section, field, dataUrl);
+      onDataUrl(dataUrl);
       setStatusMsg('Imagen cargada. Pulsa “Guardar vista previa” o “Publicar para todos”.');
     } catch {
       setErrorMsg('No se pudo procesar la imagen. Intenta con otro JPG o PNG.');
     }
+  };
+
+  // Product list helpers
+  const updateProduct = (index, field, value) => {
+    setDraft((prev) => {
+      const next = [...prev.products];
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, products: next };
+    });
+  };
+
+  const addProduct = () => {
+    setDraft((prev) => ({
+      ...prev,
+      products: [
+        ...prev.products,
+        {
+          id: `prod-${Date.now()}`,
+          tag: 'Nuevo Producto',
+          name: 'Nombre del nuevo producto',
+          description: 'Descripción corta del producto y su beneficio principal.',
+          image: '/assets/ecocaff-solido.jpg',
+          specs: ['Dosis recomendada: Por definir.', 'Modo de aplicación: En campo.'],
+          ingredients: 'Pulpa de café, Microorganismos nativos'
+        }
+      ]
+    }));
+    setStatusMsg('Nuevo producto agregado al final de la lista.');
+  };
+
+  const removeProduct = (index) => {
+    setDraft((prev) => ({
+      ...prev,
+      products: prev.products.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Guide step helpers
+  const updateStep = (listKey, index, field, value) => {
+    setDraft((prev) => {
+      const next = [...prev.guide[listKey]];
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, guide: { ...prev.guide, [listKey]: next } };
+    });
+  };
+
+  const addStep = (listKey) => {
+    setDraft((prev) => ({
+      ...prev,
+      guide: {
+        ...prev.guide,
+        [listKey]: [...prev.guide[listKey], { title: 'Nuevo paso', text: 'Explica este paso de aplicación de forma clara.' }]
+      }
+    }));
+  };
+
+  const removeStep = (listKey, index) => {
+    setDraft((prev) => ({
+      ...prev,
+      guide: {
+        ...prev.guide,
+        [listKey]: prev.guide[listKey].filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  // Checklist helpers
+  const updateChecklist = (index, field, value) => {
+    setDraft((prev) => {
+      const next = [...prev.guide.checklist];
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, guide: { ...prev.guide, checklist: next } };
+    });
+  };
+
+  const addChecklist = () => {
+    setDraft((prev) => ({
+      ...prev,
+      guide: {
+        ...prev.guide,
+        checklist: [...prev.guide.checklist, { type: 'ok', text: 'Nueva recomendación para la finca.' }]
+      }
+    }));
+  };
+
+  const removeChecklist = (index) => {
+    setDraft((prev) => ({
+      ...prev,
+      guide: {
+        ...prev.guide,
+        checklist: prev.guide.checklist.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  // FAQ helpers
+  const updateFaq = (index, field, value) => {
+    setDraft((prev) => {
+      const next = [...prev.origin.faqs];
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, origin: { ...prev.origin, faqs: next } };
+    });
+  };
+
+  const addFaq = () => {
+    setDraft((prev) => ({
+      ...prev,
+      origin: {
+        ...prev.origin,
+        faqs: [...prev.origin.faqs, { q: '¿Nueva pregunta frecuente?', a: 'Respuesta clara para el caficultor.' }]
+      }
+    }));
+  };
+
+  const removeFaq = (index) => {
+    setDraft((prev) => ({
+      ...prev,
+      origin: {
+        ...prev.origin,
+        faqs: prev.origin.faqs.filter((_, i) => i !== index)
+      }
+    }));
   };
 
   const handleSavePreview = () => {
@@ -123,7 +250,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
       const res = await fetch('/api/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'publish', password, catalog: draft })
+        body: JSON.stringify({ action: 'publish', password: password.trim(), catalog: draft })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -151,7 +278,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
                 Acceso Administrador
               </h1>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', margin: '0 0 20px' }}>
-                Ingresa la contraseña de Ecocaff para editar textos, dosis, fotos y publicar cambios en la web oficial.
+                Ingresa la contraseña de Ecocaff para editar textos, agregar productos, cambiar pasos y publicar en la web oficial.
               </p>
 
               {errorMsg && (
@@ -163,18 +290,41 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
 
               <form onSubmit={handleLogin}>
                 <label htmlFor="admin-pass" className="sr-only">Contraseña de administrador</label>
-                <input
-                  id="admin-pass"
-                  name="admin-password"
-                  type="password"
-                  className="field-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Contraseña de administrador…"
-                  autoComplete="current-password"
-                  required
-                  style={{ marginBottom: '14px' }}
-                />
+                <div style={{ position: 'relative', marginBottom: '14px' }}>
+                  <input
+                    id="admin-pass"
+                    name="admin-password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="field-input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Contraseña de administrador…"
+                    autoComplete="current-password"
+                    required
+                    style={{ paddingRight: '48px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                    style={{
+                      position: 'absolute',
+                      right: '4px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '40px',
+                      height: '40px',
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'grid',
+                      placeItems: 'center'
+                    }}
+                  >
+                    {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                  </button>
+                </div>
                 <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={authLoading}>
                   {authLoading ? 'Verificando…' : 'Entrar al panel'}
                 </button>
@@ -189,7 +339,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
   return (
     <section id="view-admin" className="view-page active" data-view="admin">
       <div className="section">
-        <div className="container" style={{ maxWidth: '980px' }}>
+        <div className="container" style={{ maxWidth: '1020px' }}>
           <div className="section-header" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '14px', maxWidth: '100%' }}>
             <div>
               <span className="eyebrow">
@@ -197,7 +347,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
                 CRM Ecocaff · Editor por Vistas
               </span>
               <h1>Administrar toda la web</h1>
-              <p>Selecciona la vista que quieres editar, haz los cambios y pulsa <strong>Publicar para todos</strong>.</p>
+              <p>Edita textos, fotos o agrega nuevos productos, pasos de guía y preguntas frecuentes.</p>
             </div>
             <button type="button" className="btn btn-secondary" onClick={() => { setUnlocked(false); setPassword(''); }}>
               <LogOut size={16} aria-hidden="true" />
@@ -248,7 +398,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
                   <label className="admin-upload-btn">
                     <Upload size={16} aria-hidden="true" />
                     <span>Cambiar logo</span>
-                    <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload('site', 'logoImage', e)} />
+                    <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload((url) => handleField('site', 'logoImage', url), e)} />
                   </label>
                 </div>
                 <div>
@@ -259,7 +409,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
                   <label className="admin-upload-btn">
                     <Upload size={16} aria-hidden="true" />
                     <span>Cambiar foto de portada</span>
-                    <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload('site', 'heroImage', e)} />
+                    <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload((url) => handleField('site', 'heroImage', url), e)} />
                   </label>
                 </div>
               </div>
@@ -313,37 +463,67 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
             </div>
           )}
 
-          {/* TAB 3: PRODUCTOS */}
+          {/* TAB 3: PRODUCTOS (DINAMICO) */}
           {activeTab === 'productos' && (
-            <div className="admin-grid">
-              {[
-                { key: 'solid', label: 'Producto 1 · Abono Sólido (25 kg)' },
-                { key: 'liquid', label: 'Producto 2 · Bioestimulante Líquido (1 L)' }
-              ].map(({ key, label }) => (
-                <article key={key} className="admin-card">
-                  <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.22rem', margin: '0 0 14px' }}>{label}</h2>
-                  <div className="admin-preview-img">
-                    <img src={draft[key].image} alt={draft[key].name} width="300" height="400" />
-                  </div>
-                  <label className="admin-upload-btn">
-                    <Upload size={16} aria-hidden="true" />
-                    <span>Subir nueva foto</span>
-                    <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload(key, 'image', e)} />
-                  </label>
-                  <label htmlFor={`p-tag-${key}`} className="admin-label">Etiqueta:</label>
-                  <input id={`p-tag-${key}`} className="field-input" value={draft[key].tag} onChange={(e) => handleField(key, 'tag', e.target.value)} />
-                  <label htmlFor={`p-name-${key}`} className="admin-label">Nombre:</label>
-                  <input id={`p-name-${key}`} className="field-input" value={draft[key].name} onChange={(e) => handleField(key, 'name', e.target.value)} />
-                  <label htmlFor={`p-desc-${key}`} className="admin-label">Descripción:</label>
-                  <textarea id={`p-desc-${key}`} rows={3} className="field-input admin-textarea" value={draft[key].description} onChange={(e) => handleField(key, 'description', e.target.value)} />
-                  <label htmlFor={`p-ing-${key}`} className="admin-label">Ingredientes (separados por coma):</label>
-                  <textarea id={`p-ing-${key}`} rows={2} className="field-input admin-textarea" value={draft[key].ingredients} onChange={(e) => handleField(key, 'ingredients', e.target.value)} />
-                </article>
-              ))}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.3rem', margin: 0 }}>
+                  Productos ({draft.products.length})
+                </h2>
+                <button type="button" className="btn btn-primary" onClick={addProduct} style={{ minHeight: '44px', padding: '0 16px' }}>
+                  <Plus size={18} aria-hidden="true" />
+                  Agregar nuevo producto
+                </button>
+              </div>
+
+              <div className="admin-grid">
+                {draft.products.map((prod, idx) => (
+                  <article key={prod.id || idx} className="admin-card">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <strong style={{ fontSize: '1rem' }}>Producto #{idx + 1}</strong>
+                      {draft.products.length > 1 && (
+                        <button type="button" className="tour-close" onClick={() => removeProduct(idx)} aria-label={`Eliminar producto ${idx + 1}`} style={{ color: 'var(--cherry)' }}>
+                          <Trash2 size={18} aria-hidden="true" />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="admin-preview-img">
+                      <img src={prod.image} alt={prod.name} width="300" height="400" />
+                    </div>
+                    <label className="admin-upload-btn">
+                      <Upload size={16} aria-hidden="true" />
+                      <span>Subir nueva foto</span>
+                      <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload((url) => updateProduct(idx, 'image', url), e)} />
+                    </label>
+
+                    <label htmlFor={`p-tag-${idx}`} className="admin-label">Etiqueta:</label>
+                    <input id={`p-tag-${idx}`} className="field-input" value={prod.tag} onChange={(e) => updateProduct(idx, 'tag', e.target.value)} />
+
+                    <label htmlFor={`p-name-${idx}`} className="admin-label">Nombre:</label>
+                    <input id={`p-name-${idx}`} className="field-input" value={prod.name} onChange={(e) => updateProduct(idx, 'name', e.target.value)} />
+
+                    <label htmlFor={`p-desc-${idx}`} className="admin-label">Descripción:</label>
+                    <textarea id={`p-desc-${idx}`} rows={3} className="field-input admin-textarea" value={prod.description} onChange={(e) => updateProduct(idx, 'description', e.target.value)} />
+
+                    <label htmlFor={`p-specs-${idx}`} className="admin-label">Especificaciones (una por línea):</label>
+                    <textarea
+                      id={`p-specs-${idx}`}
+                      rows={3}
+                      className="field-input admin-textarea"
+                      value={(prod.specs || []).join('\n')}
+                      onChange={(e) => updateProduct(idx, 'specs', e.target.value.split('\n'))}
+                    />
+
+                    <label htmlFor={`p-ing-${idx}`} className="admin-label">Ingredientes (separados por coma):</label>
+                    <textarea id={`p-ing-${idx}`} rows={2} className="field-input admin-textarea" value={prod.ingredients || ''} onChange={(e) => updateProduct(idx, 'ingredients', e.target.value)} />
+                  </article>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* TAB 4: GUIA DE USO */}
+          {/* TAB 4: GUIA DE USO (DINAMICA) */}
           {activeTab === 'guia' && (
             <div className="admin-card">
               <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: '0 0 14px' }}>Vista: Guía de Uso</h2>
@@ -359,38 +539,68 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
               <label className="admin-upload-btn">
                 <Upload size={16} aria-hidden="true" />
                 <span>Cambiar imagen de esquema</span>
-                <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload('guide', 'diagramImage', e)} />
+                <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload((url) => handleField('guide', 'diagramImage', url), e)} />
               </label>
 
-              <div className="admin-grid">
+              <div className="admin-grid" style={{ marginTop: '18px' }}>
                 <div>
-                  <label htmlFor="gs1" className="admin-label">Sólido · Paso 1:</label>
-                  <textarea id="gs1" rows={2} className="field-input admin-textarea" value={draft.guide.solidStep1} onChange={(e) => handleField('guide', 'solidStep1', e.target.value)} />
-                  <label htmlFor="gs2" className="admin-label">Sólido · Paso 2:</label>
-                  <textarea id="gs2" rows={2} className="field-input admin-textarea" value={draft.guide.solidStep2} onChange={(e) => handleField('guide', 'solidStep2', e.target.value)} />
-                  <label htmlFor="gs3" className="admin-label">Sólido · Paso 3:</label>
-                  <textarea id="gs3" rows={2} className="field-input admin-textarea" value={draft.guide.solidStep3} onChange={(e) => handleField('guide', 'solidStep3', e.target.value)} />
-                  <label htmlFor="gs4" className="admin-label">Sólido · Paso 4:</label>
-                  <textarea id="gs4" rows={2} className="field-input admin-textarea" value={draft.guide.solidStep4} onChange={(e) => handleField('guide', 'solidStep4', e.target.value)} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <strong>Pasos Abono Sólido ({draft.guide.solidSteps.length})</strong>
+                    <button type="button" className="tour-btn" onClick={() => addStep('solidSteps')}><Plus size={14} /> Agregar paso</button>
+                  </div>
+                  {draft.guide.solidSteps.map((st, i) => (
+                    <div key={i} style={{ background: 'var(--bg-cream)', padding: '12px', borderRadius: '10px', marginBottom: '10px', border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <small style={{ fontWeight: 700 }}>Paso {i + 1}</small>
+                        <button type="button" className="tour-close" onClick={() => removeStep('solidSteps', i)} aria-label="Eliminar paso" style={{ color: 'var(--cherry)' }}><Trash2 size={15} /></button>
+                      </div>
+                      <input className="field-input" style={{ marginBottom: '6px' }} value={st.title} onChange={(e) => updateStep('solidSteps', i, 'title', e.target.value)} />
+                      <textarea rows={2} className="field-input admin-textarea" value={st.text} onChange={(e) => updateStep('solidSteps', i, 'text', e.target.value)} />
+                    </div>
+                  ))}
                 </div>
+
                 <div>
-                  <label htmlFor="gl1" className="admin-label">Líquido · Paso 1:</label>
-                  <textarea id="gl1" rows={2} className="field-input admin-textarea" value={draft.guide.liquidStep1} onChange={(e) => handleField('guide', 'liquidStep1', e.target.value)} />
-                  <label htmlFor="gl2" className="admin-label">Líquido · Paso 2:</label>
-                  <textarea id="gl2" rows={2} className="field-input admin-textarea" value={draft.guide.liquidStep2} onChange={(e) => handleField('guide', 'liquidStep2', e.target.value)} />
-                  <label htmlFor="gl3" className="admin-label">Líquido · Paso 3:</label>
-                  <textarea id="gl3" rows={2} className="field-input admin-textarea" value={draft.guide.liquidStep3} onChange={(e) => handleField('guide', 'liquidStep3', e.target.value)} />
-                  <label htmlFor="gl4" className="admin-label">Líquido · Paso 4:</label>
-                  <textarea id="gl4" rows={2} className="field-input admin-textarea" value={draft.guide.liquidStep4} onChange={(e) => handleField('guide', 'liquidStep4', e.target.value)} />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <strong>Pasos Bioestimulante Líquido ({draft.guide.liquidSteps.length})</strong>
+                    <button type="button" className="tour-btn" onClick={() => addStep('liquidSteps')}><Plus size={14} /> Agregar paso</button>
+                  </div>
+                  {draft.guide.liquidSteps.map((st, i) => (
+                    <div key={i} style={{ background: 'var(--bg-cream)', padding: '12px', borderRadius: '10px', marginBottom: '10px', border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <small style={{ fontWeight: 700 }}>Paso {i + 1}</small>
+                        <button type="button" className="tour-close" onClick={() => removeStep('liquidSteps', i)} aria-label="Eliminar paso" style={{ color: 'var(--cherry)' }}><Trash2 size={15} /></button>
+                      </div>
+                      <input className="field-input" style={{ marginBottom: '6px' }} value={st.title} onChange={(e) => updateStep('liquidSteps', i, 'title', e.target.value)} />
+                      <textarea rows={2} className="field-input admin-textarea" value={st.text} onChange={(e) => updateStep('liquidSteps', i, 'text', e.target.value)} />
+                    </div>
+                  ))}
                 </div>
+              </div>
+
+              <div style={{ marginTop: '18px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <strong>Recomendaciones SÍ / NO ({draft.guide.checklist.length})</strong>
+                  <button type="button" className="tour-btn" onClick={addChecklist}><Plus size={14} /> Agregar recomendación</button>
+                </div>
+                {draft.guide.checklist.map((c, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                    <select className="field-select" style={{ width: '90px', flexShrink: 0 }} value={c.type} onChange={(e) => updateChecklist(i, 'type', e.target.value)}>
+                      <option value="ok">SÍ</option>
+                      <option value="no">NO</option>
+                    </select>
+                    <input className="field-input" value={c.text} onChange={(e) => updateChecklist(i, 'text', e.target.value)} />
+                    <button type="button" className="tour-close" onClick={() => removeChecklist(i)} aria-label="Eliminar recomendación" style={{ color: 'var(--cherry)' }}><Trash2 size={16} /></button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* TAB 5: ORIGEN Y CONTACTO */}
+          {/* TAB 5: ORIGEN Y FAQ (DINAMICO) */}
           {activeTab === 'origen' && (
             <div className="admin-card">
-              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: '0 0 14px' }}>Vista: Origen, Finca y Contacto</h2>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', margin: '0 0 14px' }}>Vista: Origen, Finca y Preguntas</h2>
               <div className="admin-grid">
                 <div>
                   <label htmlFor="o-farm" className="admin-label">Nombre de la finca:</label>
@@ -415,6 +625,23 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
               <textarea id="o-st1" rows={3} className="field-input admin-textarea" value={draft.origin.story1} onChange={(e) => handleField('origin', 'story1', e.target.value)} />
               <label htmlFor="o-ct" className="admin-label">Título tarjeta de contacto:</label>
               <input id="o-ct" className="field-input" value={draft.origin.contactTitle} onChange={(e) => handleField('origin', 'contactTitle', e.target.value)} />
+
+              <div style={{ marginTop: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <strong>Preguntas Frecuentes ({draft.origin.faqs.length})</strong>
+                  <button type="button" className="tour-btn" onClick={addFaq}><Plus size={14} /> Agregar pregunta</button>
+                </div>
+                {draft.origin.faqs.map((f, i) => (
+                  <div key={i} style={{ background: 'var(--bg-cream)', padding: '12px', borderRadius: '10px', marginBottom: '10px', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <small style={{ fontWeight: 700 }}>Pregunta {i + 1}</small>
+                      <button type="button" className="tour-close" onClick={() => removeFaq(i)} aria-label="Eliminar pregunta" style={{ color: 'var(--cherry)' }}><Trash2 size={15} /></button>
+                    </div>
+                    <input className="field-input" style={{ marginBottom: '6px' }} value={f.q} onChange={(e) => updateFaq(i, 'q', e.target.value)} />
+                    <textarea rows={2} className="field-input admin-textarea" value={f.a} onChange={(e) => updateFaq(i, 'a', e.target.value)} />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

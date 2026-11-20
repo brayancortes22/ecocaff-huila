@@ -23,36 +23,102 @@
     "kgLevante": 1.25,
     "bultoKg": 25
   },
-  "solid": {
-    "tag": "Presentación Sólida · Bulto 25 kg",
-    "name": "Abono Orgánico Natural (Tipo Bocashi)",
-    "description": "Empaque ergonómico de 25 kg en papel kraft con ventana vertical transparente para verificar textura, color oscuro y humedad antes de abrir.",
-    "image": "/assets/ecocaff-solido.jpg",
-    "ingredients": "Pulpa/cáscara de café, Gallinaza, Tierra fértil, Carbón triturado, Salvado de arroz, Ceniza vegetal, Melaza / Panela, Microorganismos de montaña"
-  },
-  "liquid": {
-    "tag": "Presentación Líquida · Envase 1 L",
-    "name": "Bioestimulante Líquido Orgánico (Biolixiviado)",
-    "description": "Envase beige mate ergonómico con tapa de seguridad marrón y ranura lateral graduada (200–800 ml) para medir con precisión en campo.",
-    "image": "/assets/ecocaff-liquido.jpg",
-    "ingredients": "Lixiviado de café fermentado, Microorganismos nativos, Melaza activadora, Nutrientes solubles naturales"
-  },
+  "products": [
+    {
+      "id": "solido",
+      "tag": "Presentación Sólida · Bulto 25 kg",
+      "name": "Abono Orgánico Natural (Tipo Bocashi)",
+      "description": "Empaque ergonómico de 25 kg en papel kraft con ventana vertical transparente para verificar textura, color oscuro y humedad antes de abrir.",
+      "image": "/assets/ecocaff-solido.jpg",
+      "specs": [
+        "Dosis en producción: 3 kg por árbol (1 bulto = ~8 árboles).",
+        "Dosis en levante / zoca: 1 a 1.5 kg por árbol.",
+        "Aporte agronómico: Mejora retención de humedad, estructura del suelo y aumenta rendimiento de forma rentable."
+      ],
+      "ingredients": "Pulpa/cáscara de café, Gallinaza, Tierra fértil, Carbón triturado, Salvado de arroz, Ceniza vegetal, Melaza / Panela, Microorganismos de montaña"
+    },
+    {
+      "id": "liquido",
+      "tag": "Presentación Líquida · Envase 1 L",
+      "name": "Bioestimulante Líquido Orgánico (Biolixiviado)",
+      "description": "Envase beige mate ergonómico con tapa de seguridad marrón y ranura lateral graduada (200–800 ml) para medir con precisión en campo.",
+      "image": "/assets/ecocaff-liquido.jpg",
+      "specs": [
+        "Dilución recomendada: 1 a 2 litros por bomba de espalda de 20 L (mezcla al 5% – 10%).",
+        "Modo de aplicación: Foliar sobre el follaje o en drench directo a la base del árbol.",
+        "Complemento ideal: Refuerza la floración y el llenado de fruto junto al abono sólido."
+      ],
+      "ingredients": "Lixiviado de café fermentado, Microorganismos nativos, Melaza activadora, Nutrientes solubles naturales"
+    }
+  ],
   "guide": {
     "title": "¿Cómo se usa Ecocaff en tu cafetal?",
     "subtitle": "Elige el producto que tienes en la mano para ver las instrucciones exactas de preparación, aplicación y cuidado en campo.",
     "diagramImage": "/assets/esquema-media-luna.jpg",
-    "solidStep1": "Aplica de 2 a 3 veces al año (cosecha principal y traviesa), idealmente 5 a 15 días antes de floración y al inicio del llenado de grano, con el suelo húmedo.",
-    "solidStep2": "Aplica 3 kg por árbol en producción (1 bulto de 25 kg alcanza para ~8 palos). En árboles jóvenes o zoca en levante usa 1 a 1.5 kg por postura.",
-    "solidStep3": "Retira 10 a 15 cm del tallo (donde cae el agua de las hojas). En ladera, haz una zanja en media luna en la parte alta, deposita el abono y tapa con tierra u hojarasca.",
-    "solidStep4": "Mantén los sacos en lugar seco, ventilado y a la sombra para proteger los microorganismos benéficos. Usa guantes al manipular a granel.",
-    "liquidStep1": "Agita suavemente el envase beige antes de usar y mide la cantidad exacta usando la ranura lateral graduada (200–800 ml) sin desperdiciar producto.",
-    "liquidStep2": "Mezcla de 1 a 2 litros de Ecocaff Líquido en una bomba de espalda de 20 litros de agua limpia (dilución al 5% – 10%).",
-    "liquidStep3": "Aplica en foliar sobre las hojas (mañana temprano o al caer la tarde) o en drench directo a la zona de gotera de la raíz.",
-    "liquidStep4": "Asegura la tapa marrón después de medir y conserva el envase en un lugar fresco y a la sombra. Complementa con el sólido en pre-floración."
+    "solidSteps": [
+      {
+        "title": "Elige el momento clave",
+        "text": "Aplica de 2 a 3 veces al año (cosecha principal y traviesa), idealmente 5 a 15 días antes de floración y al inicio del llenado de grano, con el suelo húmedo."
+      },
+      {
+        "title": "Mide la dosis por árbol",
+        "text": "Aplica 3 kg por árbol en producción (1 bulto de 25 kg alcanza para ~8 palos). En árboles jóvenes o zoca en levante usa 1 a 1.5 kg por postura."
+      },
+      {
+        "title": "Media luna en zona de gotera",
+        "text": "Retira 10 a 15 cm del tallo (donde cae el agua de las hojas). En ladera, haz una zanja en media luna en la parte alta, deposita el abono y tapa con tierra u hojarasca."
+      },
+      {
+        "title": "Guarda el bulto bajo techo",
+        "text": "Mantén los sacos en lugar seco, ventilado y a la sombra para proteger los microorganismos benéficos. Usa guantes al manipular a granel."
+      }
+    ],
+    "liquidSteps": [
+      {
+        "title": "Agita y mide en la ranura",
+        "text": "Agita suavemente el envase beige antes de usar y mide la cantidad exacta usando la ranura lateral graduada (200–800 ml) sin desperdiciar producto."
+      },
+      {
+        "title": "Diluye en bomba de 20 L",
+        "text": "Mezcla de 1 a 2 litros de Ecocaff Líquido en una bomba de espalda de 20 litros de agua limpia (dilución al 5% – 10%)."
+      },
+      {
+        "title": "Aplica foliar o en drench",
+        "text": "Aplica en foliar sobre las hojas (mañana temprano o al caer la tarde) o en drench directo a la zona de gotera de la raíz."
+      },
+      {
+        "title": "Cierra bien y protege del sol",
+        "text": "Asegura la tapa marrón después de medir y conserva el envase en un lugar fresco y a la sombra. Complementa con el sólido en pre-floración."
+      }
+    ],
+    "checklist": [
+      { "type": "ok", "text": "Aplica cuando el suelo tenga buena humedad (inicio de lluvias) para activar la vida del suelo." },
+      { "type": "ok", "text": "Tapa ligeramente el abono sólido con tierra u hojarasca en laderas para evitar que el agua lo arrastre." },
+      { "type": "no", "text": "No pegues el abono directamente al tallo del cafeto; siempre respeta la zona de gotera (10–15 cm)." },
+      { "type": "no", "text": "No apliques el bioestimulante foliar a pleno sol del mediodía; hazlo en horas frescas de la mañana o tarde." }
+    ]
   },
   "origin": {
     "headline": "Del corazón de Algeciras, Huila, con rostro campesino",
     "story1": "Ecocaff nace para resolver dos dolores reales del caficultor huilense: el alto costo de los fertilizantes sintéticos importados y la pérdida ambiental de la pulpa de café durante el beneficio.",
-    "contactTitle": "¿Listo para probar Ecocaff en tu lote?"
+    "contactTitle": "¿Listo para probar Ecocaff en tu lote?",
+    "faqs": [
+      {
+        "q": "¿Puedo combinar Ecocaff con mi fertilización tradicional?",
+        "a": "Sí. Puedes usar Ecocaff como reemplazo 100% orgánico o en manejo integrado (transición), combinando la dosis orgánica con una fracción reducida de fertilizante químico mientras el suelo recupera su actividad biológica."
+      },
+      {
+        "q": "¿Sirve para otros cultivos además del café?",
+        "a": "Sí, aunque la dosificación principal está calibrada para café en Algeciras, su base de Bocashi y biolixiviado también beneficia frutales y cultivos de pancoger de la región. Para cultivos distintos al café se recomienda ajustar según análisis de suelo."
+      },
+      {
+        "q": "¿Por qué la presentación sólida viene en bultos de 25 kg?",
+        "a": "Porque 25 kg es un peso ergonómico diseñado pensando en la salud del trabajador rural y en el transporte por caminos y laderas empinadas, rindiendo exactamente para unos 8 árboles adultos."
+      },
+      {
+        "q": "¿Cómo puedo ser punto de venta o aliado comercial en Algeciras?",
+        "a": "Si tienes un almacén de insumos agrícolas o deseas hacer un pedido directo para tu finca o vereda, escríbenos por WhatsApp para coordinar precios de distribuidor, entregas y muestras demostrativas."
+      }
+    ]
   }
 }
