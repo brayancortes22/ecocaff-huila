@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Calculator, MessageCircle } from 'lucide-react';
 
-const WHATSAPP_PHONE = '573132208657';
-
-export default function CalculatorView() {
+export default function CalculatorView({ whatsapp = '573132208657' }) {
   const [countMode, setCountMode] = useState('trees');
   const [treesInput, setTreesInput] = useState('1000');
   const [hectaresInput, setHectaresInput] = useState('1');
@@ -251,7 +249,7 @@ export default function CalculatorView() {
 
               <a
                 id="btn-whatsapp-order"
-                href={`https://wa.me/${WHATSAPP_PHONE}?text=${waText}`}
+                href={`https://wa.me/${whatsapp}?text=${waText}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-whatsapp"

@@ -16,8 +16,33 @@ import ProductsView from './components/ProductsView';
 import GuideView from './components/GuideView';
 import OriginView from './components/OriginView';
 import QrShareModal from './components/QrShareModal';
+import AdminView from './components/AdminView';
 
-const VALID_VIEWS = ['inicio', 'calculadora', 'productos', 'guia', 'origen'];
+const VALID_VIEWS = ['inicio', 'calculadora', 'productos', 'guia', 'origen', 'admin'];
+
+const DEFAULT_CATALOG = {
+  site: {
+    logoImage: '/assets/ecocaff-logo.jpg',
+    heroImage: '/assets/hero-cafetal.jpg',
+    heroLead: 'Bienvenido a la guía oficial de Ecocaff. Si escaneaste el código QR de tu bulto o botella, elige la sección que necesitas para calcular tu dosis, revisar la composición o ver cómo aplicarlo en ladera.',
+    farmName: 'Finca Buenos Aires',
+    producerName: 'Hoyden Espinosa',
+    location: 'Vereda El Vergel, Algeciras (Huila)',
+    whatsapp: '573132208657'
+  },
+  solid: {
+    tag: 'Presentación Sólida · Bulto 25 kg',
+    name: 'Abono Orgánico Natural (Tipo Bocashi)',
+    description: 'Empaque ergonómico de 25 kg en papel kraft con ventana vertical transparente para verificar textura, color oscuro y humedad antes de abrir.',
+    image: '/assets/ecocaff-solido.jpg'
+  },
+  liquid: {
+    tag: 'Presentación Líquida · Envase 1 L',
+    name: 'Bioestimulante Líquido Orgánico (Biolixiviado)',
+    description: 'Envase beige mate ergonómico con tapa de seguridad marrón y ranura lateral graduada (200–800 ml) para medir con precisión en campo.',
+    image: '/assets/ecocaff-liquido.jpg'
+  }
+};
 
 const TOUR_STEPS = [
   {
@@ -61,6 +86,36 @@ export default function App() {
   const [view, setView] = useState(getViewFromHash);
   const [qrOpen, setQrOpen] = useState(false);
   const [tourIndex, setTourIndex] = useState(-1);
+  const [catalog, setCatalog] = useState(() => {
+    try {
+      const saved = localStorage.getItem('ecocaff_catalog_override');
+      return saved ? { ...DEFAULT_CATALOG, ...JSON.parse(saved) } : DEFAULT_CATALOG;
+    } catch {
+      return DEFAULT_CATALOG;
+    }
+  });
+
+  useEffect(() => {
+    if (localStorage.getItem('ecocaff_catalog_override')) return;
+    fetch('/catalog.json')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.solid && data?.liquid && data?.site) {
+          setCatalog(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSaveCatalogLocal = (nextCatalog) => {
+    setCatalog(nextCatalog);
+    localStorage.setItem('ecocaff_catalog_override', JSON.stringify(nextCatalog));
+  };
+
+  const handleResetCatalogLocal = () => {
+    localStorage.removeItem('ecocaff_catalog_override');
+    setCatalog(DEFAULT_CATALOG);
+  };
 
   const navigateTo = (targetView, updateHash = true) => {
     const next = VALID_VIEWS.includes(targetView) ? targetView : 'inicio';
@@ -135,7 +190,7 @@ export default function App() {
             }}
             aria-label="Inicio Ecocaff"
           >
-            <img src="/assets/ecocaff-logo.jpg" alt="Logo oficial de Ecocaff" className="brand-logo-img" width="44" height="44" />
+            <img src={catalog.site.logoImage} alt="Logo oficial de Ecocaff" className="brand-logo-img" width="54" height="44" />
             <span className="brand-text">
               <span className="brand-name">Ecocaff</span>
               <span className="brand-sub">El ciclo que revive tu tierra</span>
@@ -204,9 +259,7 @@ export default function App() {
                     Bioeconomía Circular · Vereda El Vergel, Huila
                   </span>
                   <h1>De la pulpa del café a la <em>nutrición viva</em> de tu cafetal.</h1>
-                  <p className="hero-lead">
-                    Bienvenido a la guía oficial de <strong>Ecocaff</strong>. Si escaneaste el código QR de tu bulto o botella, elige la sección que necesitas para calcular tu dosis, revisar la composición o ver cómo aplicarlo en ladera.
-                  </p>
+                  <p className="hero-lead">{catalog.site.heroLead}</p>
 
                   <div className="hero-actions">
                     <a
@@ -248,15 +301,15 @@ export default function App() {
 
                 <div className="hero-media">
                   <div className="hero-image-wrap">
-                    <img src="/assets/hero-cafetal.jpg" alt="Cafetal en las montañas de Algeciras, Huila al amanecer" width="1200" height="900" fetchPriority="high" />
+                    <img src={catalog.site.heroImage} alt="Cafetal en las montañas de Algeciras, Huila al amanecer" width="1200" height="900" fetchPriority="high" />
                   </div>
                   <div className="hero-float-card">
                     <div className="float-icon" aria-hidden="true">
                       <MapPin size={20} />
                     </div>
                     <div>
-                      <strong>Finca Buenos Aires · Algeciras, Huila</strong>
-                      <small>Productor: Hoyden Espinosa · Vereda El Vergel</small>
+                      <strong>{catalog.site.farmName} · Algeciras, Huila</strong>
+                      <small>Productor: {catalog.site.producerName} · {catalog.site.location}</small>
                     </div>
                   </div>
                 </div>
@@ -303,23 +356,41 @@ export default function App() {
           </section>
         )}
 
-        {view === 'calculadora' && <CalculatorView />}
-        {view === 'productos' && <ProductsView />}
+        {view === 'calculadora' && <CalculatorView whatsapp={catalog.site.whatsapp} />}
+        {view === 'productos' && <ProductsView catalog={catalog} />}
         {view === 'guia' && <GuideView />}
-        {view === 'origen' && <OriginView onNavigate={navigateTo} onOpenQr={() => setQrOpen(true)} />}
+        {view === 'origen' && <OriginView site={catalog.site} onNavigate={navigateTo} onOpenQr={() => setQrOpen(true)} />}
+        {view === 'admin' && (
+          <AdminView
+            catalog={catalog}
+            onSaveLocal={handleSaveCatalogLocal}
+            onResetLocal={handleResetCatalogLocal}
+            onNavigate={navigateTo}
+          />
+        )}
       </main>
 
       <footer className="footer">
         <div className="container footer-inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src="/assets/ecocaff-logo.jpg" alt="" className="brand-logo-img" width="40" height="40" aria-hidden="true" />
+            <img src={catalog.site.logoImage} alt="" className="brand-logo-img" width="54" height="44" aria-hidden="true" />
             <div>
               <strong style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', color: '#fff' }}>Ecocaff</strong>
-              <span style={{ display: 'block', opacity: 0.78 }}>El ciclo que revive tu tierra · Vereda El Vergel, Algeciras, Huila</span>
+              <span style={{ display: 'block', opacity: 0.78 }}>El ciclo que revive tu tierra · {catalog.site.location}</span>
             </div>
           </div>
-          <div>
-            <span>Bioeconomía circular cafetera · Finca Buenos Aires · WhatsApp +57 313 2208657</span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px' }}>
+            <span>{catalog.site.farmName} · WhatsApp +{catalog.site.whatsapp}</span>
+            <a
+              href="#admin"
+              style={{ textDecoration: 'underline', opacity: 0.85 }}
+              onClick={(e) => {
+                e.preventDefault();
+                navigateTo('admin');
+              }}
+            >
+              Administrar web
+            </a>
           </div>
         </div>
       </footer>
@@ -329,7 +400,7 @@ export default function App() {
           Calcular Dosis
         </a>
         <a
-          href="https://wa.me/573132208657?text=Hola%20Ecocaff%2C%20necesito%20asesor%C3%ADa%20sobre%20el%20abono."
+          href={`https://wa.me/${catalog.site.whatsapp}?text=Hola%20Ecocaff%2C%20necesito%20asesor%C3%ADa%20sobre%20el%20abono.`}
           target="_blank"
           rel="noopener noreferrer"
           className="btn btn-whatsapp"

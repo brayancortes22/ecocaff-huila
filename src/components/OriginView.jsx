@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, MessageCircle, QrCode, Calculator } from 'lucide-react';
 
-export default function OriginView({ onNavigate, onOpenQr }) {
+export default function OriginView({ site, onNavigate, onOpenQr }) {
   return (
     <section id="view-origen" className="view-page active" data-view="origen">
       <div className="section section-dark">
@@ -17,18 +17,18 @@ export default function OriginView({ onNavigate, onOpenQr }) {
                 <strong>Ecocaff</strong> nace para resolver dos dolores reales del caficultor huilense: el alto costo de los fertilizantes sintéticos importados y la pérdida ambiental de la pulpa de café durante el beneficio.
               </p>
               <p style={{ color: 'rgba(251, 248, 243, 0.82)', margin: 0 }}>
-                Respaldado por el trabajo de <strong>Hoyden Espinosa</strong> en la <strong>Finca Buenos Aires</strong> (Vereda El Vergel), garantizamos trazabilidad de origen y un peso ergonómico de 25 kg adaptado a nuestras montañas.
+                Respaldado por el trabajo de <strong>{site.producerName}</strong> en la <strong>{site.farmName}</strong> ({site.location}), garantizamos trazabilidad de origen y un peso ergonómico de 25 kg adaptado a nuestras montañas.
               </p>
             </div>
 
             <div className="trace-card">
               <div className="trace-row">
                 <span>Productor</span>
-                <strong>Hoyden Espinosa · Finca Buenos Aires</strong>
+                <strong>{site.producerName} · {site.farmName}</strong>
               </div>
               <div className="trace-row">
                 <span>Ubicación</span>
-                <strong>Vereda El Vergel, Algeciras (Huila)</strong>
+                <strong>{site.location}</strong>
               </div>
               <div className="trace-row">
                 <span>Trazabilidad</span>
@@ -105,11 +105,11 @@ export default function OriginView({ onNavigate, onOpenQr }) {
               ¿Listo para probar Ecocaff en tu lote?
             </h3>
             <p style={{ color: 'var(--text-muted)', margin: '0 0 22px' }}>
-              Escríbenos al <strong>+57 313 2208657</strong> para cotizar bultos de 25 kg, bioestimulante líquido de 1 L o alianzas comerciales.
+              Escríbenos al <strong>+{site.whatsapp}</strong> para cotizar bultos de 25 kg, bioestimulante líquido de 1 L o alianzas comerciales.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px' }}>
               <a
-                href="https://wa.me/573132208657?text=Hola%20Ecocaff%2C%20quiero%20informaci%C3%B3n%20sobre%20pedidos%20y%20precios%20en%20Algeciras."
+                href={`https://wa.me/${site.whatsapp}?text=Hola%20Ecocaff%2C%20quiero%20informaci%C3%B3n%20sobre%20pedidos%20y%20precios%20en%20Algeciras.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-whatsapp"

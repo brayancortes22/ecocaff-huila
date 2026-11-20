@@ -1,7 +1,8 @@
 import React from 'react';
 import { Package, Check } from 'lucide-react';
 
-export default function ProductsView() {
+export default function ProductsView({ catalog }) {
+  const { solid, liquid } = catalog;
   return (
     <section id="view-productos" className="view-page active" data-view="productos">
       <div className="section">
@@ -18,13 +19,13 @@ export default function ProductsView() {
           <div className="products-grid">
             <article className="product-card">
               <div className="product-img">
-                <img src="/assets/ecocaff-solido.jpg" alt="Bulto de 25 kg de Abono Orgánico Natural Ecocaff en papel kraft" width="1200" height="900" loading="lazy" />
+                <img src={solid.image} alt={solid.name} width="1200" height="900" loading="lazy" />
               </div>
               <div className="product-body">
-                <span className="product-tag">Presentación Sólida · Bulto 25 kg</span>
-                <h2>Abono Orgánico Natural (Tipo Bocashi)</h2>
+                <span className="product-tag">{solid.tag}</span>
+                <h2>{solid.name}</h2>
                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.94rem' }}>
-                  Empaque ergonómico de 25 kg en papel kraft con ventana vertical transparente para verificar textura, color oscuro y humedad antes de abrir.
+                  {solid.description}
                 </p>
 
                 <ul className="spec-list">
@@ -60,13 +61,13 @@ export default function ProductsView() {
 
             <article className="product-card">
               <div className="product-img">
-                <img src="/assets/ecocaff-liquido.jpg" alt="Botella ergonómica de 1 litro de Bioestimulante Líquido Orgánico Ecocaff" width="1200" height="900" loading="lazy" />
+                <img src={liquid.image} alt={liquid.name} width="1200" height="900" loading="lazy" />
               </div>
               <div className="product-body">
-                <span className="product-tag">Presentación Líquida · Envase 1 L</span>
-                <h2>Bioestimulante Líquido Orgánico (Biolixiviado)</h2>
+                <span className="product-tag">{liquid.tag}</span>
+                <h2>{liquid.name}</h2>
                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.94rem' }}>
-                  Envase beige mate ergonómico con tapa de seguridad marrón y ranura lateral graduada (200–800 ml) para medir con precisión en campo.
+                  {liquid.description}
                 </p>
 
                 <ul className="spec-list">
