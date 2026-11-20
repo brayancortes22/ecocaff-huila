@@ -49,6 +49,18 @@
         "Complemento ideal: Refuerza la floración y el llenado de fruto junto al abono sólido."
       ],
       "ingredients": "Lixiviado de café fermentado, Microorganismos nativos, Melaza activadora, Nutrientes solubles naturales"
+    },
+    {
+      "id": "prod-1795145272951",
+      "tag": "producto de prueba",
+      "name": "Nombre del nuevo producto",
+      "description": "Descripción corta del producto y su beneficio principal.",
+      "image": "/assets/ecocaff-solido.jpg",
+      "specs": [
+        "Dosis recomendada: Por definir.",
+        "Modo de aplicación: En campo."
+      ],
+      "ingredients": "Pulpa de café, Microorganismos nativos"
     }
   ],
   "guide": {
@@ -92,10 +104,22 @@
       }
     ],
     "checklist": [
-      { "type": "ok", "text": "Aplica cuando el suelo tenga buena humedad (inicio de lluvias) para activar la vida del suelo." },
-      { "type": "ok", "text": "Tapa ligeramente el abono sólido con tierra u hojarasca en laderas para evitar que el agua lo arrastre." },
-      { "type": "no", "text": "No pegues el abono directamente al tallo del cafeto; siempre respeta la zona de gotera (10–15 cm)." },
-      { "type": "no", "text": "No apliques el bioestimulante foliar a pleno sol del mediodía; hazlo en horas frescas de la mañana o tarde." }
+      {
+        "type": "ok",
+        "text": "Aplica cuando el suelo tenga buena humedad (inicio de lluvias) para activar la vida del suelo."
+      },
+      {
+        "type": "ok",
+        "text": "Tapa ligeramente el abono sólido con tierra u hojarasca en laderas para evitar que el agua lo arrastre."
+      },
+      {
+        "type": "no",
+        "text": "No pegues el abono directamente al tallo del cafeto; siempre respeta la zona de gotera (10–15 cm)."
+      },
+      {
+        "type": "no",
+        "text": "No apliques el bioestimulante foliar a pleno sol del mediodía; hazlo en horas frescas de la mañana o tarde."
+      }
     ]
   },
   "origin": {
