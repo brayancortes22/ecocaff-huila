@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import { Calculator, MessageCircle } from 'lucide-react';
 
-export default function CalculatorView({ whatsapp = '573132208657' }) {
+export default function CalculatorView({ whatsapp = '573132208657', config }) {
+  const cfg = config || {
+    title: 'Calcula cuántos bultos o litros necesita tu lote',
+    subtitle: 'Responde estas 5 preguntas rápidas con el lenguaje de tu finca para obtener la dosis exacta sin desperdiciar dinero.',
+    kgProduccion: 3,
+    kgLevante: 1.25,
+    bultoKg: 25
+  };
   const [countMode, setCountMode] = useState('trees');
   const [treesInput, setTreesInput] = useState('1000');
   const [hectaresInput, setHectaresInput] = useState('1');
@@ -16,9 +23,9 @@ export default function CalculatorView({ whatsapp = '573132208657' }) {
     : Math.round(Math.max(0.1, parseFloat(hectaresInput) || 0) * density);
 
   const factor = strategy === '100' ? 1 : 0.5;
-  const kgPerTree = stage === 'produccion' ? 3 : 1.25;
+  const kgPerTree = stage === 'produccion' ? (cfg.kgProduccion || 3) : (cfg.kgLevante || 1.25);
   const totalKg = Math.round(trees * kgPerTree * factor);
-  const sacks = Math.max(1, Math.ceil(totalKg / 25));
+  const sacks = Math.max(1, Math.ceil(totalKg / (cfg.bultoKg || 25)));
 
   const pumps = Math.max(1, Math.ceil((trees / 40) * factor));
   const litersMin = pumps * 1;
@@ -49,8 +56,8 @@ export default function CalculatorView({ whatsapp = '573132208657' }) {
               <Calculator size={15} aria-hidden="true" />
               Herramienta de Campo
             </span>
-            <h1>Calcula cuántos bultos o litros necesita tu lote</h1>
-            <p>Responde estas 5 preguntas rápidas con el lenguaje de tu finca para obtener la dosis exacta sin desperdiciar dinero.</p>
+            <h1>{cfg.title}</h1>
+            <p>{cfg.subtitle}</p>
           </div>
 
           <div className="calc-wrapper">

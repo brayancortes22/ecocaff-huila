@@ -1,7 +1,8 @@
 import React from 'react';
 import { MapPin, MessageCircle, QrCode, Calculator } from 'lucide-react';
 
-export default function OriginView({ site, onNavigate, onOpenQr }) {
+export default function OriginView({ site, origin, onNavigate, onOpenQr }) {
+  const o = origin || {};
   return (
     <section id="view-origen" className="view-page active" data-view="origen">
       <div className="section section-dark">
@@ -12,9 +13,9 @@ export default function OriginView({ site, onNavigate, onOpenQr }) {
                 <MapPin size={15} aria-hidden="true" />
                 Origen &amp; Trazabilidad
               </span>
-              <h1>Del corazón de Algeciras, Huila, con rostro campesino</h1>
+              <h1>{o.headline || 'Del corazón de Algeciras, Huila, con rostro campesino'}</h1>
               <p style={{ color: 'rgba(251, 248, 243, 0.82)', marginBottom: '16px' }}>
-                <strong>Ecocaff</strong> nace para resolver dos dolores reales del caficultor huilense: el alto costo de los fertilizantes sintéticos importados y la pérdida ambiental de la pulpa de café durante el beneficio.
+                {o.story1}
               </p>
               <p style={{ color: 'rgba(251, 248, 243, 0.82)', margin: 0 }}>
                 Respaldado por el trabajo de <strong>{site.producerName}</strong> en la <strong>{site.farmName}</strong> ({site.location}), garantizamos trazabilidad de origen y un peso ergonómico de 25 kg adaptado a nuestras montañas.
@@ -102,7 +103,7 @@ export default function OriginView({ site, onNavigate, onOpenQr }) {
             }}
           >
             <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: '0 0 10px' }}>
-              ¿Listo para probar Ecocaff en tu lote?
+              {o.contactTitle || '¿Listo para probar Ecocaff en tu lote?'}
             </h3>
             <p style={{ color: 'var(--text-muted)', margin: '0 0 22px' }}>
               Escríbenos al <strong>+{site.whatsapp}</strong> para cotizar bultos de 25 kg, bioestimulante líquido de 1 L o alianzas comerciales.

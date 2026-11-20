@@ -46,14 +46,9 @@ export default function ProductsView({ catalog }) {
                 <div>
                   <strong style={{ fontSize: '0.85rem', display: 'block', marginBottom: '6px' }}>Composición transparente:</strong>
                   <div className="ingredients-chips">
-                    <span className="chip">Pulpa/cáscara de café</span>
-                    <span className="chip">Gallinaza</span>
-                    <span className="chip">Tierra fértil</span>
-                    <span className="chip">Carbón triturado</span>
-                    <span className="chip">Salvado de arroz</span>
-                    <span className="chip">Ceniza vegetal</span>
-                    <span className="chip">Melaza / Panela</span>
-                    <span className="chip">Microorganismos de montaña</span>
+                    {String(solid.ingredients || '').split(',').filter((s) => s.trim()).map((item) => (
+                      <span key={item} className="chip">{item.trim()}</span>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -88,10 +83,9 @@ export default function ProductsView({ catalog }) {
                 <div>
                   <strong style={{ fontSize: '0.85rem', display: 'block', marginBottom: '6px' }}>Composición transparente:</strong>
                   <div className="ingredients-chips">
-                    <span className="chip">Lixiviado de café fermentado</span>
-                    <span className="chip">Microorganismos nativos</span>
-                    <span className="chip">Melaza activadora</span>
-                    <span className="chip">Nutrientes solubles naturales</span>
+                    {String(liquid.ingredients || '').split(',').filter((s) => s.trim()).map((item) => (
+                      <span key={item} className="chip">{item.trim()}</span>
+                    ))}
                   </div>
                 </div>
               </div>

@@ -14,8 +14,9 @@ import {
   X
 } from 'lucide-react';
 
-export default function GuideView() {
+export default function GuideView({ guide }) {
   const [tab, setTab] = useState('solido');
+  const g = guide || {};
 
   return (
     <section id="view-guia" className="view-page active" data-view="guia">
@@ -26,8 +27,8 @@ export default function GuideView() {
               <BookOpen size={15} aria-hidden="true" />
               Guía de Uso Paso a Paso
             </span>
-            <h1>¿Cómo se usa Ecocaff en tu cafetal?</h1>
-            <p>Elige el producto que tienes en la mano para ver las instrucciones exactas de preparación, aplicación y cuidado en campo.</p>
+            <h1>{g.title || '¿Cómo se usa Ecocaff en tu cafetal?'}</h1>
+            <p>{g.subtitle || 'Elige el producto que tienes en la mano para ver las instrucciones exactas de preparación, aplicación y cuidado en campo.'}</p>
           </div>
 
           <div className="guide-tabs" role="tablist" aria-label="Guía de uso por producto">
@@ -64,28 +65,28 @@ export default function GuideView() {
                   <Calendar size={20} />
                 </div>
                 <h3>1. Elige el momento clave</h3>
-                <p>Aplica de <strong>2 a 3 veces al año</strong> (cosecha principal y traviesa), idealmente <strong>5 a 15 días antes de floración</strong> y al inicio del llenado de grano, con el suelo húmedo.</p>
+                <p>{g.solidStep1}</p>
               </article>
               <article className="step-card">
                 <div className="step-icon" aria-hidden="true">
                   <Scale size={20} />
                 </div>
                 <h3>2. Mide la dosis por árbol</h3>
-                <p>Aplica <strong>3 kg por árbol en producción</strong> (1 bulto de 25 kg alcanza para ~8 palos). En árboles jóvenes o zoca en levante usa <strong>1 a 1.5 kg por postura</strong>.</p>
+                <p>{g.solidStep2}</p>
               </article>
               <article className="step-card">
                 <div className="step-icon" aria-hidden="true">
                   <Mountain size={20} />
                 </div>
                 <h3>3. Media luna en zona de gotera</h3>
-                <p>Retira <strong>10 a 15 cm del tallo</strong> (donde cae el agua de las hojas). En ladera, haz una zanja en <strong>media luna en la parte alta</strong>, deposita el abono y tapa con tierra u hojarasca.</p>
+                <p>{g.solidStep3}</p>
               </article>
               <article className="step-card">
                 <div className="step-icon" aria-hidden="true">
                   <ShieldCheck size={20} />
                 </div>
                 <h3>4. Guarda el bulto bajo techo</h3>
-                <p>Mantén los sacos en lugar seco, ventilado y a la sombra para proteger los microorganismos benéficos. Usa guantes al manipular a granel.</p>
+                <p>{g.solidStep4}</p>
               </article>
             </div>
           ) : (
@@ -95,28 +96,28 @@ export default function GuideView() {
                   <FlaskConical size={20} />
                 </div>
                 <h3>1. Agita y mide en la ranura</h3>
-                <p>Agita suavemente el envase beige antes de usar y mide la cantidad exacta usando la <strong>ranura lateral graduada (200–800 ml)</strong> sin desperdiciar producto.</p>
+                <p>{g.liquidStep1}</p>
               </article>
               <article className="step-card">
                 <div className="step-icon" aria-hidden="true">
                   <Droplets size={20} />
                 </div>
                 <h3>2. Diluye en bomba de 20 L</h3>
-                <p>Mezcla de <strong>1 a 2 litros de Ecocaff Líquido</strong> en una bomba de espalda de <strong>20 litros de agua limpia</strong> (dilución al 5% – 10%).</p>
+                <p>{g.liquidStep2}</p>
               </article>
               <article className="step-card">
                 <div className="step-icon" aria-hidden="true">
                   <Sprout size={20} />
                 </div>
                 <h3>3. Aplica foliar o en drench</h3>
-                <p>Aplica en <strong>foliar</strong> sobre las hojas (mañana temprano o al caer la tarde) o en <strong>drench</strong> directo a la zona de gotera de la raíz.</p>
+                <p>{g.liquidStep3}</p>
               </article>
               <article className="step-card">
                 <div className="step-icon" aria-hidden="true">
                   <Sun size={20} />
                 </div>
                 <h3>4. Cierra bien y protege del sol</h3>
-                <p>Asegura la tapa marrón después de medir y conserva el envase en un lugar fresco y a la sombra. Complementa con el sólido en pre-floración.</p>
+                <p>{g.liquidStep4}</p>
               </article>
             </div>
           )}
@@ -129,7 +130,7 @@ export default function GuideView() {
               </p>
               <div className="diagram-figure">
                 <img
-                  src="/assets/esquema-media-luna.jpg"
+                  src={g.diagramImage || '/assets/esquema-media-luna.jpg'}
                   alt="Ilustración de aplicación en media luna en la parte alta de la pendiente a 10 a 15 centímetros del tallo en zona de gotera"
                   width="1280"
                   height="720"
