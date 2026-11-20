@@ -48,7 +48,7 @@ const TOUR_STEPS = [
     view: 'origen',
     selector: '#contacto-card',
     title: '5. Origen, QR y WhatsApp',
-    desc: 'Trazabilidad de Don Hernando en Algeciras (Huila), descarga del código QR para empaques y contacto al +57 313 2208657.'
+    desc: 'Trazabilidad de Hoyden Espinosa (Finca Buenos Aires) en Algeciras (Huila), descarga del código QR y contacto al +57 313 2208657.'
   }
 ];
 
@@ -255,8 +255,8 @@ export default function App() {
                       <MapPin size={20} />
                     </div>
                     <div>
-                      <strong>Lote 024-B · Finca La Esperanza</strong>
-                      <small>Homenaje a Don Hernando y la tradición cafetera del Huila</small>
+                      <strong>Lote 024-B · Finca Buenos Aires</strong>
+                      <small>Homenaje a Hoyden Espinosa y la tradición cafetera del Huila</small>
                     </div>
                   </div>
                 </div>

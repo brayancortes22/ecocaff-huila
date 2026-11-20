@@ -17,14 +17,14 @@ export default function OriginView({ onNavigate, onOpenQr }) {
                 <strong>Ecocaff</strong> nace para resolver dos dolores reales del caficultor huilense: el alto costo de los fertilizantes sintéticos importados y la pérdida ambiental de la pulpa de café durante el beneficio.
               </p>
               <p style={{ color: 'rgba(251, 248, 243, 0.82)', margin: 0 }}>
-                En el reverso de cada empaque rendimos homenaje a <strong>Don Hernando</strong> y a las familias de la <strong>Vereda El Vergel</strong>, garantizando trazabilidad por lote y un peso ergonómico de 25 kg adaptado a nuestras montañas.
+                En el reverso de cada empaque rendimos homenaje a <strong>Hoyden Espinosa</strong> y a las familias de la <strong>Vereda El Vergel</strong>, garantizando trazabilidad por lote y un peso ergonómico de 25 kg adaptado a nuestras montañas.
               </p>
             </div>
 
             <div className="trace-card">
               <div className="trace-row">
                 <span>Productor Piloto</span>
-                <strong>Don Hernando · Finca La Esperanza</strong>
+                <strong>Hoyden Espinosa · Finca Buenos Aires</strong>
               </div>
               <div className="trace-row">
                 <span>Ubicación</span>
