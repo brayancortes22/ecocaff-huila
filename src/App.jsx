@@ -255,8 +255,8 @@ export default function App() {
                       <MapPin size={20} />
                     </div>
                     <div>
-                      <strong>Lote 024-B · Finca Buenos Aires</strong>
-                      <small>Homenaje a Hoyden Espinosa y la tradición cafetera del Huila</small>
+                      <strong>Finca Buenos Aires · Algeciras, Huila</strong>
+                      <small>Productor: Hoyden Espinosa · Vereda El Vergel</small>
                     </div>
                   </div>
                 </div>
@@ -319,7 +319,7 @@ export default function App() {
             </div>
           </div>
           <div>
-            <span>Bioeconomía circular cafetera · Lote 024-B · WhatsApp +57 313 2208657</span>
+            <span>Bioeconomía circular cafetera · Finca Buenos Aires · WhatsApp +57 313 2208657</span>
           </div>
         </div>
       </footer>

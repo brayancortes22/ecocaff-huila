@@ -17,13 +17,13 @@ export default function OriginView({ onNavigate, onOpenQr }) {
                 <strong>Ecocaff</strong> nace para resolver dos dolores reales del caficultor huilense: el alto costo de los fertilizantes sintéticos importados y la pérdida ambiental de la pulpa de café durante el beneficio.
               </p>
               <p style={{ color: 'rgba(251, 248, 243, 0.82)', margin: 0 }}>
-                En el reverso de cada empaque rendimos homenaje a <strong>Hoyden Espinosa</strong> y a las familias de la <strong>Vereda El Vergel</strong>, garantizando trazabilidad por lote y un peso ergonómico de 25 kg adaptado a nuestras montañas.
+                Respaldado por el trabajo de <strong>Hoyden Espinosa</strong> en la <strong>Finca Buenos Aires</strong> (Vereda El Vergel), garantizamos trazabilidad de origen y un peso ergonómico de 25 kg adaptado a nuestras montañas.
               </p>
             </div>
 
             <div className="trace-card">
               <div className="trace-row">
-                <span>Productor Piloto</span>
+                <span>Productor</span>
                 <strong>Hoyden Espinosa · Finca Buenos Aires</strong>
               </div>
               <div className="trace-row">
@@ -31,8 +31,8 @@ export default function OriginView({ onNavigate, onOpenQr }) {
                 <strong>Vereda El Vergel, Algeciras (Huila)</strong>
               </div>
               <div className="trace-row">
-                <span>Lote de Referencia</span>
-                <strong>Lote 024-B · Proceso Controlado</strong>
+                <span>Trazabilidad</span>
+                <strong>Origen Verificado · Proceso Controlado</strong>
               </div>
               <div className="trace-row">
                 <span>Enfoque Productivo</span>

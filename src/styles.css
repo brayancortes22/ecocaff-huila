@@ -958,7 +958,7 @@ h1, h2, h3 {
 }
 
 .product-img {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 4;
   background: var(--bg-sand);
   overflow: hidden;
 }
