@@ -49,18 +49,6 @@
         "Complemento ideal: Refuerza la floración y el llenado de fruto junto al abono sólido."
       ],
       "ingredients": "Lixiviado de café fermentado, Microorganismos nativos, Melaza activadora, Nutrientes solubles naturales"
-    },
-    {
-      "id": "prod-1795145272951",
-      "tag": "producto de prueba",
-      "name": "Nombre del nuevo producto",
-      "description": "Descripción corta del producto y su beneficio principal.",
-      "image": "/assets/ecocaff-solido.jpg",
-      "specs": [
-        "Dosis recomendada: Por definir.",
-        "Modo de aplicación: En campo."
-      ],
-      "ingredients": "Pulpa de café, Microorganismos nativos"
     }
   ],
   "guide": {
