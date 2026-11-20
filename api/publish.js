@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const githubToken = process.env.GITHUB_TOKEN;
+  const adminPassword = (process.env.ADMIN_PASSWORD || '').trim();
+  const githubToken = (process.env.GITHUB_TOKEN || '').trim();
 
   if (!adminPassword) {
     return res.status(500).json({ error: 'ADMIN_PASSWORD no está configurado en Vercel.' });
