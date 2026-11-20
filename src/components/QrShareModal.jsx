@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { X, Download, Copy, Check, QrCode } from 'lucide-react';
 
-const DEFAULT_QR_URL = 'https://ecocaff-huila.netlify.app';
+const DEFAULT_QR_URL = 'https://ecocaff-huila.vercel.app';
 
 export default function QrShareModal({ isOpen, onClose }) {
   const [url, setUrl] = useState(DEFAULT_QR_URL);
@@ -98,7 +98,7 @@ export default function QrShareModal({ isOpen, onClose }) {
           className="qr-url-input"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://ecocaff-huila.netlify.app…"
+          placeholder="https://ecocaff-huila.vercel.app…"
           autoComplete="off"
         />
 
