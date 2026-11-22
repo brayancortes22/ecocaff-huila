@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Box, Layers, Rotate3d } from 'lucide-react';
+import { Box, Rotate3d } from 'lucide-react';
 
-function ThreeCanvas({ mode, modelType, imageUrl, backImageUrl }) {
+function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -51,16 +51,8 @@ function ThreeCanvas({ mode, modelType, imageUrl, backImageUrl }) {
     const group = new THREE.Group();
     scene.add(group);
 
-    if (mode === 'A' || modelType === 'card') {
-      // Modo A (o genérico): Placa 3D con frente y reverso
-      const cardGeo = new THREE.BoxGeometry(1.75, 2.32, 0.12);
-      const sideMat = new THREE.MeshStandardMaterial({ color: 0x362419, roughness: 0.55, metalness: 0.1 });
-      const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.35, metalness: 0.05 });
-      const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.35, metalness: 0.05 });
-      const card = new THREE.Mesh(cardGeo, [sideMat, sideMat, sideMat, sideMat, frontMat, backMat]);
-      group.add(card);
-    } else if (modelType === 'sack') {
-      // Modo B: Saco Kraft 3D con frente (+Z) y reverso (-Z)
+    if (modelType === 'sack') {
+      // Saco Kraft 3D con frente (+Z) y reverso (-Z)
       const bagGeo = new THREE.BoxGeometry(1.5, 2.1, 0.62, 12, 16, 6);
       const pos = bagGeo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
@@ -194,20 +186,20 @@ function ThreeCanvas({ mode, modelType, imageUrl, backImageUrl }) {
       backTex.dispose();
       renderer.dispose();
     };
-  }, [mode, modelType, imageUrl, backImageUrl]);
+  }, [modelType, imageUrl, backImageUrl]);
 
   return (
     <div
       ref={mountRef}
       style={{
         width: '100%',
-        height: '340px',
+        height: '420px',
         borderRadius: '14px',
         overflow: 'hidden',
         cursor: 'grab',
         border: '1px solid var(--border)'
       }}
-      aria-label={`Visor 3D interactivo Modo ${mode}`}
+      aria-label="Visor 3D interactivo 360 grados"
     />
   );
 }
@@ -231,14 +223,14 @@ export default function Demo3DView({ catalog, onNavigate }) {
           <div className="section-header">
             <span className="eyebrow">
               <Rotate3d size={15} aria-hidden="true" />
-              Comparativa Interactiva 3D (Arrastra para girar)
+              Visor 3D 360° (Arrastra para girar)
             </span>
-            <h1>Elige cómo quieres mostrar tus productos en 3D</h1>
-            <p>Cada producto puede elegir su forma 3D desde <code>#admin</code> (Saco, Botella o Placa) y proyectar su foto frontal y trasera 360°.</p>
+            <h1>Explora los empaques de Ecocaff en 3D</h1>
+            <p>Gira el bulto de 25 kg o el bidón de 1 L para ver su diseño frontal y trasero con código QR.</p>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginBottom: '20px' }}>
-            <div className="guide-tabs" role="tablist" aria-label="Elegir producto para comparar 3D" style={{ marginBottom: 0 }}>
+            <div className="guide-tabs" role="tablist" aria-label="Elegir producto para ver en 3D" style={{ marginBottom: 0 }}>
               {products.map((p, idx) => (
                 <button
                   key={p.id || idx}
@@ -259,39 +251,23 @@ export default function Demo3DView({ catalog, onNavigate }) {
               onClick={() => setUseCleanDemo((v) => !v)}
               style={{ minHeight: '44px', padding: '0 16px', fontSize: '0.84rem' }}
             >
-              {useCleanDemo ? 'Mostrando: Texturas limpias de prueba' : 'Mostrando: Fotos del catálogo'}
+              {useCleanDemo ? 'Mostrando: Etiquetas limpias 3D' : 'Mostrando: Fotos del catálogo'}
             </button>
           </div>
 
-          <div className="products-grid">
-            <article className="product-card">
-              <div className="product-body">
-                <span className="product-tag">
-                  <Layers size={14} aria-hidden="true" />
-                  Modo A · Placa / Relieve 3D
-                </span>
-                <h2>Tarjeta 3D con iluminación</h2>
-                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.92rem' }}>
-                  Muestra la foto frontal y trasera con grosor, luz y rotación 3D; sirve para cualquier producto sin importar su forma.
-                </p>
-                <ThreeCanvas mode="A" modelType="card" imageUrl={activeFront} backImageUrl={activeBack} />
-              </div>
-            </article>
-
-            <article className="product-card">
-              <div className="product-body">
-                <span className="product-tag">
-                  <Box size={14} aria-hidden="true" />
-                  Modo B · Empaque 3D Real 360°
-                </span>
-                <h2>Forma: {activeModel === 'sack' ? 'Saco / Bulto' : activeModel === 'bottle' ? 'Botella / Envase' : 'Placa 3D'}</h2>
-                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.92rem' }}>
-                  Proyecta la foto frontal y trasera sobre la forma de empaque elegida en <code>#admin</code>.
-                </p>
-                <ThreeCanvas mode="B" modelType={activeModel} imageUrl={activeFront} backImageUrl={activeBack} />
-              </div>
-            </article>
-          </div>
+          <article className="product-card" style={{ maxWidth: '740px', margin: '0 auto' }}>
+            <div className="product-body">
+              <span className="product-tag">
+                <Box size={14} aria-hidden="true" />
+                {activeModel === 'sack' ? 'Empaque 3D · Saco / Bulto 25 kg' : 'Empaque 3D · Bidón / Botella 1 L'}
+              </span>
+              <h2>{current.name}</h2>
+              <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.92rem' }}>
+                Arrastra con el dedo o el mouse para rotar 360° y revisar la cara frontal y trasera.
+              </p>
+              <ThreeCanvas modelType={activeModel} imageUrl={activeFront} backImageUrl={activeBack} />
+            </div>
+          </article>
 
           <div style={{ marginTop: '24px', textAlign: 'center' }}>
             <button type="button" className="btn btn-secondary" onClick={() => onNavigate('productos')}>

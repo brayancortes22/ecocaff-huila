@@ -23,7 +23,7 @@ export default function ProductsView({ catalog, onNavigate }) {
                 style={{ marginTop: '16px' }}
               >
                 <Rotate3d size={18} aria-hidden="true" />
-                Ver comparativa en 3D (Modo A vs Modo B)
+                Ver empaques en 3D (360°)
               </button>
             )}
           </div>

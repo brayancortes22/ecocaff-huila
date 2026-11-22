@@ -511,8 +511,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
                       onChange={(e) => updateProduct(idx, 'modelType', e.target.value)}
                     >
                       <option value="sack">Saco / Bulto (ej. 25 kg)</option>
-                      <option value="bottle">Botella / Envase con asa (ej. 1 L)</option>
-                      <option value="card">Placa / Tarjeta 3D (genérico)</option>
+                      <option value="bottle">Botella / Bidón con asa (ej. 1 L)</option>
                     </select>
 
                     <label htmlFor={`p-tag-${idx}`} className="admin-label">Etiqueta:</label>
