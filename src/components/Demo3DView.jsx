@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Box, Layers, Rotate3d } from 'lucide-react';
 
-function ThreeCanvas({ mode, productType, imageUrl }) {
+function ThreeCanvas({ mode, productType, imageUrl, backImageUrl }) {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ function ThreeCanvas({ mode, productType, imageUrl }) {
     scene.background = new THREE.Color('#F2E9DC');
 
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
-    camera.position.set(0, 0.4, 4.2);
+    camera.position.set(0, 0.35, 4.1);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
@@ -29,36 +29,38 @@ function ThreeCanvas({ mode, productType, imageUrl }) {
     controls.enableDamping = true;
     controls.enableZoom = false;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.6;
+    controls.autoRotateSpeed = 1.4;
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.85);
+    const ambient = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambient);
 
-    const keyLight = new THREE.DirectionalLight(0xfff5e4, 1.3);
+    const keyLight = new THREE.DirectionalLight(0xfff5e4, 1.15);
     keyLight.position.set(3, 5, 4);
     scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0xa3e6b9, 0.45);
-    rimLight.position.set(-4, 2, -3);
-    scene.add(rimLight);
+    const backLight = new THREE.DirectionalLight(0xffffff, 0.85);
+    backLight.position.set(-3, 3, -4);
+    scene.add(backLight);
 
     const loader = new THREE.TextureLoader();
-    const tex = loader.load(imageUrl);
-    tex.colorSpace = THREE.SRGBColorSpace;
+    const frontTex = loader.load(imageUrl);
+    frontTex.colorSpace = THREE.SRGBColorSpace;
+    const backTex = loader.load(backImageUrl || imageUrl);
+    backTex.colorSpace = THREE.SRGBColorSpace;
 
     const group = new THREE.Group();
     scene.add(group);
 
     if (mode === 'A') {
-      // Modo A: Tarjeta / Placa 3D con grosor, marco café y reflejo de luz
+      // Modo A: Placa 3D con frente y reverso
       const cardGeo = new THREE.BoxGeometry(1.75, 2.32, 0.12);
       const sideMat = new THREE.MeshStandardMaterial({ color: 0x362419, roughness: 0.55, metalness: 0.1 });
-      const frontMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.35, metalness: 0.05 });
-      const backMat = new THREE.MeshStandardMaterial({ color: 0x1e513b, roughness: 0.6 });
+      const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.35, metalness: 0.05 });
+      const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.35, metalness: 0.05 });
       const card = new THREE.Mesh(cardGeo, [sideMat, sideMat, sideMat, sideMat, frontMat, backMat]);
       group.add(card);
     } else if (productType === 'solido') {
-      // Modo B: Saco Kraft 25 kg 3D
+      // Modo B: Saco Kraft 25 kg 3D con frente (+Z) y reverso (-Z)
       const bagGeo = new THREE.BoxGeometry(1.5, 2.1, 0.62, 12, 16, 6);
       const pos = bagGeo.attributes.position;
       for (let i = 0; i < pos.count; i++) {
@@ -71,19 +73,20 @@ function ThreeCanvas({ mode, productType, imageUrl }) {
       }
       bagGeo.computeVertexNormals();
 
-      const kraftMat = new THREE.MeshStandardMaterial({ color: 0xb98d61, roughness: 0.85 });
-      const frontLabelMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7 });
-      const bag = new THREE.Mesh(bagGeo, [kraftMat, kraftMat, kraftMat, kraftMat, frontLabelMat, kraftMat]);
+      const kraftMat = new THREE.MeshStandardMaterial({ color: 0xc59b6d, roughness: 0.85 });
+      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.65 });
+      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.65 });
+      const bag = new THREE.Mesh(bagGeo, [kraftMat, kraftMat, kraftMat, kraftMat, frontLabelMat, backLabelMat]);
       group.add(bag);
 
       // Doblez superior cosido
       const foldGeo = new THREE.BoxGeometry(1.54, 0.14, 0.18);
-      const foldMat = new THREE.MeshStandardMaterial({ color: 0x9c7248, roughness: 0.85 });
+      const foldMat = new THREE.MeshStandardMaterial({ color: 0xa67c52, roughness: 0.85 });
       const fold = new THREE.Mesh(foldGeo, foldMat);
       fold.position.y = 1.08;
       group.add(fold);
     } else {
-      // Modo B: Envase Beige 1 L 3D con tapa marrón y etiqueta
+      // Modo B: Envase Beige 1 L 3D con etiqueta frontal y trasera
       const bodyGeo = new THREE.CylinderGeometry(0.68, 0.72, 1.85, 32);
       const beigeMat = new THREE.MeshStandardMaterial({ color: 0xe6d2b8, roughness: 0.45 });
       const body = new THREE.Mesh(bodyGeo, beigeMat);
@@ -91,11 +94,18 @@ function ThreeCanvas({ mode, productType, imageUrl }) {
       group.add(body);
 
       // Etiqueta frontal curva
-      const labelGeo = new THREE.CylinderGeometry(0.695, 0.735, 1.25, 32, 1, true, -Math.PI * 0.35, Math.PI * 0.7);
-      const labelMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5, side: THREE.DoubleSide });
-      const label = new THREE.Mesh(labelGeo, labelMat);
-      label.scale.set(1.05, 1, 0.68);
-      group.add(label);
+      const frontLabelGeo = new THREE.CylinderGeometry(0.695, 0.735, 1.25, 32, 1, true, -Math.PI * 0.35, Math.PI * 0.7);
+      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.5, side: THREE.DoubleSide });
+      const frontLabel = new THREE.Mesh(frontLabelGeo, frontLabelMat);
+      frontLabel.scale.set(1.05, 1, 0.68);
+      group.add(frontLabel);
+
+      // Etiqueta trasera curva
+      const backLabelGeo = new THREE.CylinderGeometry(0.695, 0.735, 1.25, 32, 1, true, Math.PI * 0.65, Math.PI * 0.7);
+      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.5, side: THREE.DoubleSide });
+      const backLabel = new THREE.Mesh(backLabelGeo, backLabelMat);
+      backLabel.scale.set(1.05, 1, 0.68);
+      group.add(backLabel);
 
       // Cuello y tapa marrón
       const capGeo = new THREE.CylinderGeometry(0.24, 0.25, 0.28, 24);
@@ -133,10 +143,11 @@ function ThreeCanvas({ mode, productType, imageUrl }) {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
       controls.dispose();
-      tex.dispose();
+      frontTex.dispose();
+      backTex.dispose();
       renderer.dispose();
     };
-  }, [mode, productType, imageUrl]);
+  }, [mode, productType, imageUrl, backImageUrl]);
 
   return (
     <div
@@ -156,9 +167,12 @@ function ThreeCanvas({ mode, productType, imageUrl }) {
 
 export default function Demo3DView({ catalog, onNavigate }) {
   const [selected, setSelected] = useState('solido');
-  const solidImg = catalog?.products?.[0]?.image || '/assets/ecocaff-solido.jpg';
-  const liquidImg = catalog?.products?.[1]?.image || '/assets/ecocaff-liquido.jpg';
-  const activeImg = selected === 'solido' ? solidImg : liquidImg;
+  const solidFront = catalog?.products?.[0]?.image || '/assets/ecocaff-solido.jpg';
+  const solidBack = catalog?.products?.[0]?.backImage || solidFront;
+  const liquidFront = catalog?.products?.[1]?.image || '/assets/ecocaff-liquido.jpg';
+  const liquidBack = catalog?.products?.[1]?.backImage || liquidFront;
+  const activeFront = selected === 'solido' ? solidFront : liquidFront;
+  const activeBack = selected === 'solido' ? solidBack : liquidBack;
 
   return (
     <section id="view-demo-3d" className="view-page active" data-view="demo-3d">
@@ -205,7 +219,7 @@ export default function Demo3DView({ catalog, onNavigate }) {
                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.92rem' }}>
                   Sirve para <strong>cualquier producto nuevo</strong> que suba Yulitza en `#admin` sin importar su forma. Muestra la foto completa con grosor, luz y rotación 3D.
                 </p>
-                <ThreeCanvas mode="A" productType={selected} imageUrl={activeImg} />
+                <ThreeCanvas mode="A" productType={selected} imageUrl={activeFront} backImageUrl={activeBack} />
               </div>
             </article>
 
@@ -217,9 +231,9 @@ export default function Demo3DView({ catalog, onNavigate }) {
                 </span>
                 <h2>Modelo 3D de Bulto / Botella</h2>
                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.92rem' }}>
-                  Proyecta la imagen sobre un <strong>empaque 3D real</strong> (saco kraft de 25 kg o botella beige de 1 L). Ideal para presentaciones, pero pensado para esos 2 formatos fijos.
+                  Proyecta la foto frontal y trasera (sin fondo) sobre un <strong>empaque 3D real</strong> (saco kraft de 25 kg o botella beige de 1 L).
                 </p>
-                <ThreeCanvas mode="B" productType={selected} imageUrl={activeImg} />
+                <ThreeCanvas mode="B" productType={selected} imageUrl={activeFront} backImageUrl={activeBack} />
               </div>
             </article>
           </div>

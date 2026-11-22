@@ -30,6 +30,7 @@
       "name": "Abono Orgánico Natural (Tipo Bocashi)",
       "description": "Empaque ergonómico de 25 kg en papel kraft con ventana vertical transparente para verificar textura, color oscuro y humedad antes de abrir.",
       "image": "/assets/ecocaff-solido.jpg",
+      "backImage": "/assets/ecocaff-solido.jpg",
       "specs": [
         "Dosis en producción: 3 kg por árbol (1 bulto = ~8 árboles).",
         "Dosis en levante / zoca: 1 a 1.5 kg por árbol.",
@@ -43,6 +44,7 @@
       "name": "Bioestimulante Líquido Orgánico (Biolixiviado)",
       "description": "Envase beige mate ergonómico con tapa de seguridad marrón y ranura lateral graduada (200–800 ml) para medir con precisión en campo.",
       "image": "/assets/ecocaff-liquido.jpg",
+      "backImage": "/assets/ecocaff-liquido.jpg",
       "specs": [
         "Dilución recomendada: 1 a 2 litros por bomba de espalda de 20 L (mezcla al 5% – 10%).",
         "Modo de aplicación: Foliar sobre el follaje o en drench directo a la base del árbol.",

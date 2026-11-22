@@ -493,8 +493,13 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
                     </div>
                     <label className="admin-upload-btn">
                       <Upload size={16} aria-hidden="true" />
-                      <span>Subir nueva foto</span>
+                      <span>Subir foto frontal (sin fondo para 3D)</span>
                       <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload((url) => updateProduct(idx, 'image', url), e)} />
+                    </label>
+                    <label className="admin-upload-btn" style={{ background: 'var(--bg-sand)', color: 'var(--bg-espresso)', borderColor: 'rgba(35,23,16,0.25)' }}>
+                      <Upload size={16} aria-hidden="true" />
+                      <span>Subir foto trasera (para 3D 360°)</span>
+                      <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload((url) => updateProduct(idx, 'backImage', url), e)} />
                     </label>
 
                     <label htmlFor={`p-tag-${idx}`} className="admin-label">Etiqueta:</label>
