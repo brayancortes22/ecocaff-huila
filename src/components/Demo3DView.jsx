@@ -3,30 +3,92 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Box, Rotate3d, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
-function loadSolidBackedTexture(url, bgHex) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 768;
-  canvas.height = 1024;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = bgHex;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function analyzeImageForMold(url, fallbackColor) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      const tmp = document.createElement('canvas');
+      tmp.width = w;
+      tmp.height = h;
+      const tctx = tmp.getContext('2d');
+      tctx.drawImage(img, 0, 0);
 
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
+      let minX = w;
+      let minY = h;
+      let maxX = 0;
+      let maxY = 0;
+      let rSum = 0;
+      let gSum = 0;
+      let bSum = 0;
+      let count = 0;
 
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => {
-    ctx.fillStyle = bgHex;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-    const dw = img.width * scale;
-    const dh = img.height * scale;
-    ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
-    tex.needsUpdate = true;
-  };
-  img.src = url;
-  return tex;
+      try {
+        const data = tctx.getImageData(0, 0, w, h).data;
+        for (let y = 0; y < h; y += 2) {
+          for (let x = 0; x < w; x += 2) {
+            const idx = (y * w + x) * 4;
+            const a = data[idx + 3];
+            if (a > 24) {
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+              rSum += data[idx];
+              gSum += data[idx + 1];
+              bSum += data[idx + 2];
+              count++;
+            }
+          }
+        }
+      } catch {
+        minX = 0;
+        minY = 0;
+        maxX = w - 1;
+        maxY = h - 1;
+      }
+
+      if (maxX <= minX || maxY <= minY) {
+        minX = 0;
+        minY = 0;
+        maxX = w - 1;
+        maxY = h - 1;
+      }
+
+      const cropW = Math.max(1, maxX - minX + 1);
+      const cropH = Math.max(1, maxY - minY + 1);
+      const aspect = Math.min(1.35, Math.max(0.45, cropW / cropH));
+
+      const avgColor = count > 0
+        ? (Math.round(rSum / count) << 16) | (Math.round(gSum / count) << 8) | Math.round(bSum / count)
+        : fallbackColor;
+
+      const out = document.createElement('canvas');
+      out.width = 768;
+      out.height = Math.round(768 / aspect);
+      const octx = out.getContext('2d');
+      octx.fillStyle = `#${avgColor.toString(16).padStart(6, '0')}`;
+      octx.fillRect(0, 0, out.width, out.height);
+      octx.drawImage(img, minX, minY, cropW, cropH, 0, 0, out.width, out.height);
+
+      const tex = new THREE.CanvasTexture(out);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      resolve({ tex, aspect, avgColor });
+    };
+    img.onerror = () => {
+      const fallbackCanvas = document.createElement('canvas');
+      fallbackCanvas.width = 256;
+      fallbackCanvas.height = 340;
+      const fctx = fallbackCanvas.getContext('2d');
+      fctx.fillStyle = `#${fallbackColor.toString(16).padStart(6, '0')}`;
+      fctx.fillRect(0, 0, 256, 340);
+      const tex = new THREE.CanvasTexture(fallbackCanvas);
+      resolve({ tex, aspect: 0.72, avgColor: fallbackColor });
+    };
+    img.src = url;
+  });
 }
 
 function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
@@ -38,8 +100,10 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
     const container = mountRef.current;
     if (!container) return;
 
+    let disposed = false;
+    let animId = 0;
     const width = container.clientWidth || 360;
-    const height = 340;
+    const height = 420;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#F2E9DC');
@@ -74,124 +138,137 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
     backLight.position.set(-3, 3, -4);
     scene.add(backLight);
 
-    const bgHex = modelType === 'sack' ? '#C59B6D' : '#E6CDB2';
-    const frontTex = loadSolidBackedTexture(imageUrl, bgHex);
-    const backTex = loadSolidBackedTexture(backImageUrl || imageUrl, bgHex);
-
     const group = new THREE.Group();
     scene.add(group);
 
-    if (modelType === 'sack') {
-      // Saco Kraft 3D con frente (+Z) y reverso (-Z)
-      const bagGeo = new THREE.BoxGeometry(1.5, 2.1, 0.62, 12, 16, 6);
-      const pos = bagGeo.attributes.position;
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i);
-        const y = pos.getY(i);
-        const z = pos.getZ(i);
-        const belly = 1 - Math.pow(y / 1.15, 2) * 0.25;
-        const roundX = 1 - Math.pow(x / 0.9, 2) * 0.12;
-        pos.setZ(i, z * belly * roundX * 1.15);
+    let frontTexRef = null;
+    let backTexRef = null;
+
+    const fallbackHex = modelType === 'sack' ? 0xc59b6d : 0xe6cdb2;
+
+    Promise.all([
+      analyzeImageForMold(imageUrl, fallbackHex),
+      analyzeImageForMold(backImageUrl || imageUrl, fallbackHex)
+    ]).then(([frontData, backData]) => {
+      if (disposed) {
+        frontData.tex.dispose();
+        backData.tex.dispose();
+        return;
       }
-      bagGeo.computeVertexNormals();
 
-      const kraftMat = new THREE.MeshStandardMaterial({ color: 0xc59b6d, roughness: 0.85 });
-      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.65 });
-      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.65 });
-      const bag = new THREE.Mesh(bagGeo, [kraftMat, kraftMat, kraftMat, kraftMat, frontLabelMat, backLabelMat]);
-      group.add(bag);
+      frontTexRef = frontData.tex;
+      backTexRef = backData.tex;
 
-      const foldGeo = new THREE.BoxGeometry(1.54, 0.14, 0.18);
-      const foldMat = new THREE.MeshStandardMaterial({ color: 0xa67c52, roughness: 0.85 });
-      const fold = new THREE.Mesh(foldGeo, foldMat);
-      fold.position.y = 1.08;
-      group.add(fold);
-    } else {
-      // Modo B: Bidón ergonómico 1 L (forma exacta de la foto: cuerpo rectangular redondeado, asa superior integrada, tapa marrón izquierda y visor de nivel)
-      const beigeMat = new THREE.MeshStandardMaterial({ color: 0xe6cdb2, roughness: 0.45, metalness: 0.04 });
+      const moldH = 2.15;
+      const moldW = moldH * frontData.aspect;
+      const sideColor = frontData.avgColor;
 
-      const jShape = new THREE.Shape();
-      const r = 0.14;
-      jShape.moveTo(-0.72 + r, -1.0);
-      jShape.lineTo(0.72 - r, -1.0);
-      jShape.quadraticCurveTo(0.72, -1.0, 0.72, -1.0 + r);
-      jShape.lineTo(0.72, 0.86);
-      jShape.quadraticCurveTo(0.72, 1.04, 0.52, 1.04);
-      jShape.lineTo(0.16, 1.04);
-      jShape.quadraticCurveTo(0.02, 1.04, -0.06, 0.90);
-      jShape.lineTo(-0.56, 0.90);
-      jShape.quadraticCurveTo(-0.72, 0.90, -0.72, 0.74);
-      jShape.lineTo(-0.72, -1.0 + r);
-      jShape.quadraticCurveTo(-0.72, -1.0, -0.72 + r, -1.0);
+      if (modelType === 'sack') {
+        const bagGeo = new THREE.BoxGeometry(moldW, moldH, 0.62, 12, 16, 6);
+        const pos = bagGeo.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          const z = pos.getZ(i);
+          const belly = 1 - Math.pow(y / (moldH * 0.55), 2) * 0.22;
+          const roundX = 1 - Math.pow(x / (moldW * 0.6), 2) * 0.1;
+          pos.setZ(i, z * belly * roundX * 1.12);
+        }
+        bagGeo.computeVertexNormals();
 
-      // Hueco ergonómico del asa integrada en la esquina superior derecha
-      const handleHole = new THREE.Path();
-      const hr = 0.09;
-      handleHole.moveTo(0.18 + hr, 0.34);
-      handleHole.lineTo(0.48 - hr, 0.34);
-      handleHole.quadraticCurveTo(0.48, 0.34, 0.48, 0.34 + hr);
-      handleHole.lineTo(0.48, 0.84 - hr);
-      handleHole.quadraticCurveTo(0.48, 0.84, 0.48 - hr, 0.84);
-      handleHole.lineTo(0.18 + hr, 0.84);
-      handleHole.quadraticCurveTo(0.18, 0.84, 0.18, 0.84 - hr);
-      handleHole.lineTo(0.18, 0.34 + hr);
-      handleHole.quadraticCurveTo(0.18, 0.34, 0.18 + hr, 0.34);
-      jShape.holes.push(handleHole);
+        const kraftMat = new THREE.MeshStandardMaterial({ color: sideColor, roughness: 0.85 });
+        const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.65 });
+        const backLabelMat = new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.65 });
+        const bag = new THREE.Mesh(bagGeo, [kraftMat, kraftMat, kraftMat, kraftMat, frontLabelMat, backLabelMat]);
+        group.add(bag);
 
-      const extrudeGeo = new THREE.ExtrudeGeometry(jShape, {
-        depth: 0.56,
-        bevelEnabled: true,
-        bevelThickness: 0.08,
-        bevelSize: 0.07,
-        bevelSegments: 5,
-        curveSegments: 16
-      });
-      extrudeGeo.translate(0, 0, -0.28);
-      const jugMesh = new THREE.Mesh(extrudeGeo, beigeMat);
-      group.add(jugMesh);
+        const foldGeo = new THREE.BoxGeometry(moldW + 0.04, 0.12, 0.16);
+        const foldMat = new THREE.MeshStandardMaterial({ color: sideColor, roughness: 0.85 });
+        const fold = new THREE.Mesh(foldGeo, foldMat);
+        fold.position.y = moldH / 2 + 0.04;
+        group.add(fold);
+      } else {
+        const beigeMat = new THREE.MeshStandardMaterial({ color: 0xe6cdb2, roughness: 0.45, metalness: 0.04 });
+        const halfW = Math.max(0.62, Math.min(0.82, moldW / 2));
 
-      // Tapa rosca marrón oscura en la parte superior izquierda
-      const capMat = new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.42 });
-      const neckGeo = new THREE.CylinderGeometry(0.15, 0.16, 0.1, 24);
-      const neck = new THREE.Mesh(neckGeo, beigeMat);
-      neck.position.set(-0.34, 0.97, 0);
-      group.add(neck);
+        const jShape = new THREE.Shape();
+        const r = 0.14;
+        jShape.moveTo(-halfW + r, -1.0);
+        jShape.lineTo(halfW - r, -1.0);
+        jShape.quadraticCurveTo(halfW, -1.0, halfW, -1.0 + r);
+        jShape.lineTo(halfW, 0.86);
+        jShape.quadraticCurveTo(halfW, 1.04, halfW - 0.2, 1.04);
+        jShape.lineTo(0.16, 1.04);
+        jShape.quadraticCurveTo(0.02, 1.04, -0.06, 0.90);
+        jShape.lineTo(-halfW + 0.16, 0.90);
+        jShape.quadraticCurveTo(-halfW, 0.90, -halfW, 0.74);
+        jShape.lineTo(-halfW, -1.0 + r);
+        jShape.quadraticCurveTo(-halfW, -1.0, -halfW + r, -1.0);
 
-      const capGeo = new THREE.CylinderGeometry(0.19, 0.19, 0.22, 24);
-      const cap = new THREE.Mesh(capGeo, capMat);
-      cap.position.set(-0.34, 1.1, 0);
-      group.add(cap);
+        const handleHole = new THREE.Path();
+        const hr = 0.09;
+        handleHole.moveTo(0.18 + hr, 0.34);
+        handleHole.lineTo(halfW - 0.24 - hr, 0.34);
+        handleHole.quadraticCurveTo(halfW - 0.24, 0.34, halfW - 0.24, 0.34 + hr);
+        handleHole.lineTo(halfW - 0.24, 0.84 - hr);
+        handleHole.quadraticCurveTo(halfW - 0.24, 0.84, halfW - 0.24 - hr, 0.84);
+        handleHole.lineTo(0.18 + hr, 0.84);
+        handleHole.quadraticCurveTo(0.18, 0.84, 0.18, 0.84 - hr);
+        handleHole.lineTo(0.18, 0.34 + hr);
+        handleHole.quadraticCurveTo(0.18, 0.34, 0.18 + hr, 0.34);
+        jShape.holes.push(handleHole);
 
-      // Ranura vertical graduada de líquido ámbar en el borde derecho frontal
-      const windowFrameGeo = new THREE.BoxGeometry(0.16, 1.05, 0.03);
-      const windowFrameMat = new THREE.MeshStandardMaterial({ color: 0xcab094, roughness: 0.35 });
-      const windowFrame = new THREE.Mesh(windowFrameGeo, windowFrameMat);
-      windowFrame.position.set(0.48, -0.34, 0.355);
-      group.add(windowFrame);
+        const extrudeGeo = new THREE.ExtrudeGeometry(jShape, {
+          depth: 0.56,
+          bevelEnabled: true,
+          bevelThickness: 0.08,
+          bevelSize: 0.07,
+          bevelSegments: 5,
+          curveSegments: 16
+        });
+        extrudeGeo.translate(0, 0, -0.28);
+        group.add(new THREE.Mesh(extrudeGeo, beigeMat));
 
-      const liquidStripGeo = new THREE.BoxGeometry(0.11, 0.88, 0.035);
-      const liquidStripMat = new THREE.MeshStandardMaterial({ color: 0x382419, roughness: 0.2, metalness: 0.1 });
-      const liquidStrip = new THREE.Mesh(liquidStripGeo, liquidStripMat);
-      liquidStrip.position.set(0.48, -0.40, 0.36);
-      group.add(liquidStrip);
+        const capMat = new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.42 });
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.16, 0.1, 24), beigeMat);
+        neck.position.set(-0.34, 0.97, 0);
+        group.add(neck);
 
-      // Etiqueta frontal plana (dejando espacio a la derecha para la ranura graduada)
-      const frontLabelGeo = new THREE.PlaneGeometry(0.96, 1.42);
-      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.55 });
-      const frontLabel = new THREE.Mesh(frontLabelGeo, frontLabelMat);
-      frontLabel.position.set(-0.14, -0.15, 0.366);
-      group.add(frontLabel);
+        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.22, 24), capMat);
+        cap.position.set(-0.34, 1.1, 0);
+        group.add(cap);
 
-      // Etiqueta trasera plana
-      const backLabelGeo = new THREE.PlaneGeometry(1.12, 1.48);
-      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.55 });
-      const backLabel = new THREE.Mesh(backLabelGeo, backLabelMat);
-      backLabel.rotation.y = Math.PI;
-      backLabel.position.set(0, -0.15, -0.366);
-      group.add(backLabel);
-    }
+        const windowFrame = new THREE.Mesh(
+          new THREE.BoxGeometry(0.16, 1.05, 0.03),
+          new THREE.MeshStandardMaterial({ color: 0xcab094, roughness: 0.35 })
+        );
+        windowFrame.position.set(halfW - 0.24, -0.34, 0.355);
+        group.add(windowFrame);
 
-    let animId = 0;
+        const liquidStrip = new THREE.Mesh(
+          new THREE.BoxGeometry(0.11, 0.88, 0.035),
+          new THREE.MeshStandardMaterial({ color: 0x382419, roughness: 0.2, metalness: 0.1 })
+        );
+        liquidStrip.position.set(halfW - 0.24, -0.40, 0.36);
+        group.add(liquidStrip);
+
+        const frontLabel = new THREE.Mesh(
+          new THREE.PlaneGeometry(halfW * 1.32, 1.42),
+          new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.55 })
+        );
+        frontLabel.position.set(-0.14, -0.15, 0.366);
+        group.add(frontLabel);
+
+        const backLabel = new THREE.Mesh(
+          new THREE.PlaneGeometry(halfW * 1.55, 1.48),
+          new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.55 })
+        );
+        backLabel.rotation.y = Math.PI;
+        backLabel.position.set(0, -0.15, -0.366);
+        group.add(backLabel);
+      }
+    });
+
     const animate = () => {
       animId = requestAnimationFrame(animate);
       controls.update();
@@ -209,11 +286,12 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      disposed = true;
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
       controls.dispose();
-      frontTex.dispose();
-      backTex.dispose();
+      if (frontTexRef) frontTexRef.dispose();
+      if (backTexRef) backTexRef.dispose();
       renderer.dispose();
     };
   }, [modelType, imageUrl, backImageUrl]);
@@ -315,7 +393,7 @@ export default function Demo3DView({ catalog, onNavigate }) {
               Visor 3D 360° (Arrastra para girar)
             </span>
             <h1>Explora los empaques de Ecocaff en 3D</h1>
-            <p>Gira el bulto de 25 kg o el bidón de 1 L para ver su diseño frontal y trasero con código QR.</p>
+            <p>El molde 3D se ajusta automáticamente al tamaño y color de tu imagen. Arrastra para rotar 360° o usa el zoom.</p>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginBottom: '20px' }}>
@@ -352,7 +430,7 @@ export default function Demo3DView({ catalog, onNavigate }) {
               </span>
               <h2>{current.name}</h2>
               <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.92rem' }}>
-                Arrastra con el dedo o el mouse para rotar 360° y revisar la cara frontal y trasera.
+                Arrastra con el dedo o el mouse para rotar 360° y usa la rueda o los botones para hacer zoom.
               </p>
               <ThreeCanvas modelType={activeModel} imageUrl={activeFront} backImageUrl={activeBack} />
             </div>
