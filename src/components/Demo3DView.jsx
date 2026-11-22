@@ -3,6 +3,32 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Box, Rotate3d, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
+function loadSolidBackedTexture(url, bgHex) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 768;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = bgHex;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    ctx.fillStyle = bgHex;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+    const dw = img.width * scale;
+    const dh = img.height * scale;
+    ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+    tex.needsUpdate = true;
+  };
+  img.src = url;
+  return tex;
+}
+
 function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
   const mountRef = useRef(null);
   const controlsRef = useRef(null);
@@ -48,11 +74,9 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
     backLight.position.set(-3, 3, -4);
     scene.add(backLight);
 
-    const loader = new THREE.TextureLoader();
-    const frontTex = loader.load(imageUrl);
-    frontTex.colorSpace = THREE.SRGBColorSpace;
-    const backTex = loader.load(backImageUrl || imageUrl);
-    backTex.colorSpace = THREE.SRGBColorSpace;
+    const bgHex = modelType === 'sack' ? '#C59B6D' : '#E6CDB2';
+    const frontTex = loadSolidBackedTexture(imageUrl, bgHex);
+    const backTex = loadSolidBackedTexture(backImageUrl || imageUrl, bgHex);
 
     const group = new THREE.Group();
     scene.add(group);
@@ -72,8 +96,8 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
       bagGeo.computeVertexNormals();
 
       const kraftMat = new THREE.MeshStandardMaterial({ color: 0xc59b6d, roughness: 0.85 });
-      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.65, transparent: true, alphaTest: 0.05 });
-      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.65, transparent: true, alphaTest: 0.05 });
+      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.65 });
+      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.65 });
       const bag = new THREE.Mesh(bagGeo, [kraftMat, kraftMat, kraftMat, kraftMat, frontLabelMat, backLabelMat]);
       group.add(bag);
 
@@ -153,14 +177,14 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
 
       // Etiqueta frontal plana (dejando espacio a la derecha para la ranura graduada)
       const frontLabelGeo = new THREE.PlaneGeometry(0.96, 1.42);
-      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.55, transparent: true, alphaTest: 0.05 });
+      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.55 });
       const frontLabel = new THREE.Mesh(frontLabelGeo, frontLabelMat);
       frontLabel.position.set(-0.14, -0.15, 0.366);
       group.add(frontLabel);
 
       // Etiqueta trasera plana
       const backLabelGeo = new THREE.PlaneGeometry(1.12, 1.48);
-      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.55, transparent: true, alphaTest: 0.05 });
+      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.55 });
       const backLabel = new THREE.Mesh(backLabelGeo, backLabelMat);
       backLabel.rotation.y = Math.PI;
       backLabel.position.set(0, -0.15, -0.366);
