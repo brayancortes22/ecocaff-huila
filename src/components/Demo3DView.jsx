@@ -3,12 +3,29 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Box, Rotate3d, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
-function makeEdgeStripTexture(srcCanvas, sx, sy, sw, sh, outW = 128, outH = 512) {
+function createPaperGrainTexture(hexInt) {
   const c = document.createElement('canvas');
-  c.width = outW;
-  c.height = outH;
+  c.width = 256;
+  c.height = 512;
   const ctx = c.getContext('2d');
-  ctx.drawImage(srcCanvas, sx, sy, Math.max(1, sw), Math.max(1, sh), 0, 0, outW, outH);
+  const r = (hexInt >> 16) & 255;
+  const g = (hexInt >> 8) & 255;
+  const b = hexInt & 255;
+
+  const grad = ctx.createLinearGradient(0, 0, c.width, 0);
+  grad.addColorStop(0, `rgb(${Math.max(0, r - 18)}, ${Math.max(0, g - 16)}, ${Math.max(0, b - 14)})`);
+  grad.addColorStop(0.5, `rgb(${r}, ${g}, ${b})`);
+  grad.addColorStop(1, `rgb(${Math.max(0, r - 18)}, ${Math.max(0, g - 16)}, ${Math.max(0, b - 14)})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  // Subtle vertical crease & paper fiber grain
+  ctx.fillStyle = 'rgba(0,0,0,0.06)';
+  ctx.fillRect(c.width * 0.48, 0, c.width * 0.04, c.height);
+  for (let i = 0; i < 600; i++) {
+    ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)';
+    ctx.fillRect(Math.random() * c.width, Math.random() * c.height, 2, 3);
+  }
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -96,14 +113,8 @@ function analyzeImageForMold(url, fallbackColor) {
       const tex = new THREE.CanvasTexture(out);
       tex.colorSpace = THREE.SRGBColorSpace;
 
-      const stripW = Math.max(8, Math.round(out.width * 0.06));
-      const stripH = Math.max(8, Math.round(out.height * 0.04));
-      const leftTex = makeEdgeStripTexture(out, 2, 0, stripW, out.height, 128, 512);
-      const rightTex = makeEdgeStripTexture(out, out.width - stripW - 2, 0, stripW, out.height, 128, 512);
-      const topTex = makeEdgeStripTexture(out, 0, 2, out.width, stripH, 512, 128);
-      const bottomTex = makeEdgeStripTexture(out, 0, out.height - stripH - 2, out.width, stripH, 512, 128);
-
-      resolve({ tex, leftTex, rightTex, topTex, bottomTex, aspect, edgeColor });
+      const grainTex = createPaperGrainTexture(edgeColor);
+      resolve({ tex, grainTex, aspect, edgeColor });
     };
     img.onerror = () => {
       const fallbackCanvas = document.createElement('canvas');
@@ -113,7 +124,7 @@ function analyzeImageForMold(url, fallbackColor) {
       fctx.fillStyle = `#${fallbackColor.toString(16).padStart(6, '0')}`;
       fctx.fillRect(0, 0, 256, 340);
       const tex = new THREE.CanvasTexture(fallbackCanvas);
-      resolve({ tex, leftTex: tex, rightTex: tex, topTex: tex, bottomTex: tex, aspect: 0.72, edgeColor: fallbackColor });
+      resolve({ tex, grainTex: tex, aspect: 0.72, edgeColor: fallbackColor });
     };
     img.src = url;
   });
@@ -176,10 +187,7 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
       analyzeImageForMold(imageUrl, fallbackHex),
       analyzeImageForMold(backImageUrl || imageUrl, fallbackHex)
     ]).then(([frontData, backData]) => {
-      const allTex = [
-        frontData.tex, frontData.leftTex, frontData.rightTex, frontData.topTex, frontData.bottomTex,
-        backData.tex, backData.leftTex, backData.rightTex, backData.topTex, backData.bottomTex
-      ];
+      const allTex = [frontData.tex, frontData.grainTex, backData.tex, backData.grainTex];
       if (disposed) {
         allTex.forEach((t) => t.dispose());
         return;
@@ -188,42 +196,35 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
 
       const moldH = 2.15;
       const moldW = moldH * frontData.aspect;
-      const depth = Math.max(0.48, moldW * 0.38);
+      const depth = Math.max(0.46, moldW * 0.36);
 
       if (modelType === 'sack') {
-        const bagGeo = new THREE.BoxGeometry(moldW, moldH, depth, 14, 18, 8);
+        const bagGeo = new THREE.BoxGeometry(moldW, moldH, depth, 16, 20, 8);
         const pos = bagGeo.attributes.position;
         for (let i = 0; i < pos.count; i++) {
           const x = pos.getX(i);
           const y = pos.getY(i);
           const z = pos.getZ(i);
           const yNorm = y / (moldH * 0.5);
-          const belly = 1 - Math.pow(yNorm, 2) * 0.24;
+          // Smooth pillow taper: fuller in lower-middle, cleanly pinched at top seal
+          const topPinch = yNorm > 0.75 ? 1 - ((yNorm - 0.75) / 0.25) * 0.72 : 1;
+          const belly = (1 - Math.pow(yNorm, 2) * 0.18) * topPinch;
           const xNorm = x / (moldW * 0.5);
-          const roundX = 1 - Math.pow(xNorm, 2) * 0.12;
-          // Subtle inward gusset crease on the left/right side edges
-          const isSide = Math.abs(xNorm) > 0.92;
-          const gusset = isSide ? (1 - Math.pow(Math.abs(z) / (depth * 0.5), 1.5) * 0.04) : 1;
-          pos.setX(i, x * gusset);
-          pos.setZ(i, z * belly * roundX * 1.12);
+          const roundX = 1 - Math.pow(xNorm, 2) * 0.08;
+          pos.setZ(i, z * belly * roundX);
         }
         bagGeo.computeVertexNormals();
 
+        const sideMat = new THREE.MeshStandardMaterial({ map: frontData.grainTex, roughness: 0.82 });
         const bagMats = [
-          new THREE.MeshStandardMaterial({ map: frontData.rightTex, roughness: 0.78 }), // +X right
-          new THREE.MeshStandardMaterial({ map: frontData.leftTex, roughness: 0.78 }),  // -X left
-          new THREE.MeshStandardMaterial({ map: frontData.topTex, roughness: 0.8 }),    // +Y top
-          new THREE.MeshStandardMaterial({ map: frontData.bottomTex, roughness: 0.85 }),// -Y bottom
-          new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.65 }),      // +Z front
-          new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.65 })        // -Z back
+          sideMat,
+          sideMat,
+          sideMat,
+          sideMat,
+          new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.65 }),
+          new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.65 })
         ];
         group.add(new THREE.Mesh(bagGeo, bagMats));
-
-        const foldGeo = new THREE.BoxGeometry(moldW + 0.03, 0.11, 0.14);
-        const foldMat = new THREE.MeshStandardMaterial({ map: frontData.topTex, roughness: 0.82 });
-        const fold = new THREE.Mesh(foldGeo, foldMat);
-        fold.position.y = moldH / 2 + 0.03;
-        group.add(fold);
       } else {
         const beigeMat = new THREE.MeshStandardMaterial({ color: frontData.edgeColor, roughness: 0.45, metalness: 0.04 });
         const halfW = Math.max(0.62, Math.min(0.82, moldW / 2));
