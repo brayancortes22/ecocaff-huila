@@ -85,49 +85,88 @@ function ThreeCanvas({ mode, modelType, imageUrl, backImageUrl }) {
       fold.position.y = 1.08;
       group.add(fold);
     } else {
-      // Modo B: Botella / Envase Beige con hombro redondeado, tapa marrón y asa
-      const beigeMat = new THREE.MeshStandardMaterial({ color: 0xe6d2b8, roughness: 0.42 });
-      const bodyGeo = new THREE.CylinderGeometry(0.66, 0.72, 1.7, 32);
-      const body = new THREE.Mesh(bodyGeo, beigeMat);
-      body.scale.set(1.05, 1, 0.68);
-      body.position.y = -0.1;
-      group.add(body);
+      // Modo B: Bidón ergonómico 1 L (forma exacta de la foto: cuerpo rectangular redondeado, asa superior integrada, tapa marrón izquierda y visor de nivel)
+      const beigeMat = new THREE.MeshStandardMaterial({ color: 0xe6cdb2, roughness: 0.45, metalness: 0.04 });
 
-      const shoulderGeo = new THREE.SphereGeometry(0.66, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-      const shoulder = new THREE.Mesh(shoulderGeo, beigeMat);
-      shoulder.scale.set(1.05, 0.45, 0.68);
-      shoulder.position.y = 0.75;
-      group.add(shoulder);
+      const jShape = new THREE.Shape();
+      const r = 0.14;
+      jShape.moveTo(-0.72 + r, -1.0);
+      jShape.lineTo(0.72 - r, -1.0);
+      jShape.quadraticCurveTo(0.72, -1.0, 0.72, -1.0 + r);
+      jShape.lineTo(0.72, 0.86);
+      jShape.quadraticCurveTo(0.72, 1.04, 0.52, 1.04);
+      jShape.lineTo(0.16, 1.04);
+      jShape.quadraticCurveTo(0.02, 1.04, -0.06, 0.90);
+      jShape.lineTo(-0.56, 0.90);
+      jShape.quadraticCurveTo(-0.72, 0.90, -0.72, 0.74);
+      jShape.lineTo(-0.72, -1.0 + r);
+      jShape.quadraticCurveTo(-0.72, -1.0, -0.72 + r, -1.0);
 
-      // Etiqueta frontal curva
-      const frontLabelGeo = new THREE.CylinderGeometry(0.68, 0.735, 1.25, 32, 1, true, -Math.PI * 0.35, Math.PI * 0.7);
-      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.5, side: THREE.DoubleSide });
-      const frontLabel = new THREE.Mesh(frontLabelGeo, frontLabelMat);
-      frontLabel.scale.set(1.05, 1, 0.68);
-      frontLabel.position.y = -0.1;
-      group.add(frontLabel);
+      // Hueco ergonómico del asa integrada en la esquina superior derecha
+      const handleHole = new THREE.Path();
+      const hr = 0.09;
+      handleHole.moveTo(0.18 + hr, 0.34);
+      handleHole.lineTo(0.48 - hr, 0.34);
+      handleHole.quadraticCurveTo(0.48, 0.34, 0.48, 0.34 + hr);
+      handleHole.lineTo(0.48, 0.84 - hr);
+      handleHole.quadraticCurveTo(0.48, 0.84, 0.48 - hr, 0.84);
+      handleHole.lineTo(0.18 + hr, 0.84);
+      handleHole.quadraticCurveTo(0.18, 0.84, 0.18, 0.84 - hr);
+      handleHole.lineTo(0.18, 0.34 + hr);
+      handleHole.quadraticCurveTo(0.18, 0.34, 0.18 + hr, 0.34);
+      jShape.holes.push(handleHole);
 
-      // Etiqueta trasera curva
-      const backLabelGeo = new THREE.CylinderGeometry(0.68, 0.735, 1.25, 32, 1, true, Math.PI * 0.65, Math.PI * 0.7);
-      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.5, side: THREE.DoubleSide });
-      const backLabel = new THREE.Mesh(backLabelGeo, backLabelMat);
-      backLabel.scale.set(1.05, 1, 0.68);
-      backLabel.position.y = -0.1;
-      group.add(backLabel);
+      const extrudeGeo = new THREE.ExtrudeGeometry(jShape, {
+        depth: 0.56,
+        bevelEnabled: true,
+        bevelThickness: 0.08,
+        bevelSize: 0.07,
+        bevelSegments: 5,
+        curveSegments: 16
+      });
+      extrudeGeo.translate(0, 0, -0.28);
+      const jugMesh = new THREE.Mesh(extrudeGeo, beigeMat);
+      group.add(jugMesh);
 
-      // Cuello y tapa marrón
-      const capGeo = new THREE.CylinderGeometry(0.22, 0.23, 0.28, 24);
-      const capMat = new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.4 });
+      // Tapa rosca marrón oscura en la parte superior izquierda
+      const capMat = new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.42 });
+      const neckGeo = new THREE.CylinderGeometry(0.15, 0.16, 0.1, 24);
+      const neck = new THREE.Mesh(neckGeo, beigeMat);
+      neck.position.set(-0.34, 0.97, 0);
+      group.add(neck);
+
+      const capGeo = new THREE.CylinderGeometry(0.19, 0.19, 0.22, 24);
       const cap = new THREE.Mesh(capGeo, capMat);
-      cap.position.set(-0.2, 1.12, 0);
+      cap.position.set(-0.34, 1.1, 0);
       group.add(cap);
 
-      // Asa lateral
-      const handleGeo = new THREE.TorusGeometry(0.28, 0.08, 12, 24, Math.PI);
-      const handle = new THREE.Mesh(handleGeo, beigeMat);
-      handle.rotation.z = -Math.PI / 2;
-      handle.position.set(0.56, 0.28, 0);
-      group.add(handle);
+      // Ranura vertical graduada de líquido ámbar en el borde derecho frontal
+      const windowFrameGeo = new THREE.BoxGeometry(0.16, 1.05, 0.03);
+      const windowFrameMat = new THREE.MeshStandardMaterial({ color: 0xcab094, roughness: 0.35 });
+      const windowFrame = new THREE.Mesh(windowFrameGeo, windowFrameMat);
+      windowFrame.position.set(0.48, -0.34, 0.355);
+      group.add(windowFrame);
+
+      const liquidStripGeo = new THREE.BoxGeometry(0.11, 0.88, 0.035);
+      const liquidStripMat = new THREE.MeshStandardMaterial({ color: 0x382419, roughness: 0.2, metalness: 0.1 });
+      const liquidStrip = new THREE.Mesh(liquidStripGeo, liquidStripMat);
+      liquidStrip.position.set(0.48, -0.40, 0.36);
+      group.add(liquidStrip);
+
+      // Etiqueta frontal plana (dejando espacio a la derecha para la ranura graduada)
+      const frontLabelGeo = new THREE.PlaneGeometry(0.96, 1.42);
+      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.55 });
+      const frontLabel = new THREE.Mesh(frontLabelGeo, frontLabelMat);
+      frontLabel.position.set(-0.14, -0.15, 0.366);
+      group.add(frontLabel);
+
+      // Etiqueta trasera plana
+      const backLabelGeo = new THREE.PlaneGeometry(1.12, 1.48);
+      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.55 });
+      const backLabel = new THREE.Mesh(backLabelGeo, backLabelMat);
+      backLabel.rotation.y = Math.PI;
+      backLabel.position.set(0, -0.15, -0.366);
+      group.add(backLabel);
     }
 
     let animId = 0;
