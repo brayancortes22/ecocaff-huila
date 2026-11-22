@@ -176,10 +176,14 @@ function ThreeCanvas({ mode, modelType, imageUrl, backImageUrl }) {
 export default function Demo3DView({ catalog, onNavigate }) {
   const products = Array.isArray(catalog?.products) ? catalog.products : [];
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [useCleanDemo, setUseCleanDemo] = useState(true);
   const current = products[selectedIndex] || products[0] || {};
-  const activeFront = current.image || '/assets/ecocaff-solido.jpg';
-  const activeBack = current.backImage || activeFront;
   const activeModel = current.modelType || (selectedIndex === 1 ? 'bottle' : 'sack');
+
+  const demoFront = activeModel === 'bottle' ? '/assets/demo/bottle-front.jpg' : '/assets/demo/sack-front.jpg';
+  const demoBack = activeModel === 'bottle' ? '/assets/demo/bottle-back.jpg' : '/assets/demo/sack-back.jpg';
+  const activeFront = useCleanDemo ? demoFront : (current.image || demoFront);
+  const activeBack = useCleanDemo ? demoBack : (current.backImage || activeFront);
 
   return (
     <section id="view-demo-3d" className="view-page active" data-view="demo-3d">
@@ -194,19 +198,30 @@ export default function Demo3DView({ catalog, onNavigate }) {
             <p>Cada producto puede elegir su forma 3D desde <code>#admin</code> (Saco, Botella o Placa) y proyectar su foto frontal y trasera 360°.</p>
           </div>
 
-          <div className="guide-tabs" role="tablist" aria-label="Elegir producto para comparar 3D">
-            {products.map((p, idx) => (
-              <button
-                key={p.id || idx}
-                type="button"
-                role="tab"
-                aria-selected={selectedIndex === idx}
-                className={`guide-tab-btn ${selectedIndex === idx ? 'active' : ''}`}
-                onClick={() => setSelectedIndex(idx)}
-              >
-                {p.name}
-              </button>
-            ))}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginBottom: '20px' }}>
+            <div className="guide-tabs" role="tablist" aria-label="Elegir producto para comparar 3D" style={{ marginBottom: 0 }}>
+              {products.map((p, idx) => (
+                <button
+                  key={p.id || idx}
+                  type="button"
+                  role="tab"
+                  aria-selected={selectedIndex === idx}
+                  className={`guide-tab-btn ${selectedIndex === idx ? 'active' : ''}`}
+                  onClick={() => setSelectedIndex(idx)}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className={`btn ${useCleanDemo ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setUseCleanDemo((v) => !v)}
+              style={{ minHeight: '44px', padding: '0 16px', fontSize: '0.84rem' }}
+            >
+              {useCleanDemo ? 'Mostrando: Texturas limpias de prueba' : 'Mostrando: Fotos del catálogo'}
+            </button>
           </div>
 
           <div className="products-grid">
