@@ -49,6 +49,7 @@ const DEFAULT_CATALOG = {
   products: [
     {
       id: 'solido',
+      modelType: 'sack',
       tag: 'Presentación Sólida · Bulto 25 kg',
       name: 'Abono Orgánico Natural (Tipo Bocashi)',
       description: 'Empaque ergonómico de 25 kg en papel kraft con ventana vertical transparente para verificar textura, color oscuro y humedad antes de abrir.',
@@ -63,6 +64,7 @@ const DEFAULT_CATALOG = {
     },
     {
       id: 'liquido',
+      modelType: 'bottle',
       tag: 'Presentación Líquida · Envase 1 L',
       name: 'Bioestimulante Líquido Orgánico (Biolixiviado)',
       description: 'Envase beige mate ergonómico con tapa de seguridad marrón y ranura lateral graduada (200–800 ml) para medir con precisión en campo.',

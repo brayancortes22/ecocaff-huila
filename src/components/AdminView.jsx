@@ -123,6 +123,7 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
         ...prev.products,
         {
           id: `prod-${Date.now()}`,
+          modelType: 'bottle',
           tag: 'Nuevo Producto',
           name: 'Nombre del nuevo producto',
           description: 'Descripción corta del producto y su beneficio principal.',
@@ -501,6 +502,18 @@ export default function AdminView({ catalog, onSaveLocal, onResetLocal, onNaviga
                       <span>Subir foto trasera (para 3D 360°)</span>
                       <input type="file" accept="image/*" className="sr-only" onChange={(e) => handleFileUpload((url) => updateProduct(idx, 'backImage', url), e)} />
                     </label>
+
+                    <label htmlFor={`p-model-${idx}`} className="admin-label">Forma del empaque en 3D:</label>
+                    <select
+                      id={`p-model-${idx}`}
+                      className="field-select"
+                      value={prod.modelType || (idx === 1 ? 'bottle' : 'sack')}
+                      onChange={(e) => updateProduct(idx, 'modelType', e.target.value)}
+                    >
+                      <option value="sack">Saco / Bulto (ej. 25 kg)</option>
+                      <option value="bottle">Botella / Envase con asa (ej. 1 L)</option>
+                      <option value="card">Placa / Tarjeta 3D (genérico)</option>
+                    </select>
 
                     <label htmlFor={`p-tag-${idx}`} className="admin-label">Etiqueta:</label>
                     <input id={`p-tag-${idx}`} className="field-input" value={prod.tag} onChange={(e) => updateProduct(idx, 'tag', e.target.value)} />
