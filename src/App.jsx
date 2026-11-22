@@ -68,8 +68,8 @@ const DEFAULT_CATALOG = {
       tag: 'Presentación Líquida · Envase 1 L',
       name: 'Bioestimulante Líquido Orgánico (Biolixiviado)',
       description: 'Envase beige mate ergonómico con tapa de seguridad marrón y ranura lateral graduada (200–800 ml) para medir con precisión en campo.',
-      image: '/assets/ecocaff-liquido.jpg',
-      backImage: '/assets/ecocaff-liquido.jpg',
+      image: '/assets/ecocaff-liquido.png',
+      backImage: '/assets/ecocaff-liquido-back.png',
       specs: [
         'Dilución recomendada: 1 a 2 litros por bomba de espalda de 20 L (mezcla al 5% – 10%).',
         'Modo de aplicación: Foliar sobre el follaje o en drench directo a la base del árbol.',

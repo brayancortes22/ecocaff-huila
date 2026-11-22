@@ -31,7 +31,7 @@ function createPaperGrainTexture(hexInt) {
   return tex;
 }
 
-function analyzeImageForMold(url, fallbackColor) {
+function analyzeImageForMold(url, fallbackColor, cropBodyOnly = false) {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -96,7 +96,11 @@ function analyzeImageForMold(url, fallbackColor) {
 
       const cropW = Math.max(1, maxX - minX + 1);
       const cropH = Math.max(1, maxY - minY + 1);
-      const aspect = Math.min(1.35, Math.max(0.45, cropW / cropH));
+      const sx = cropBodyOnly ? minX + Math.round(cropW * 0.05) : minX;
+      const sy = cropBodyOnly ? minY + Math.round(cropH * 0.28) : minY;
+      const sw = cropBodyOnly ? Math.round(cropW * 0.90) : cropW;
+      const sh = cropBodyOnly ? Math.round(cropH * 0.67) : cropH;
+      const aspect = Math.min(1.35, Math.max(0.45, sw / sh));
 
       const edgeColor = count > 0
         ? (Math.round(rSum / count) << 16) | (Math.round(gSum / count) << 8) | Math.round(bSum / count)
@@ -108,7 +112,7 @@ function analyzeImageForMold(url, fallbackColor) {
       const octx = out.getContext('2d');
       octx.fillStyle = `#${edgeColor.toString(16).padStart(6, '0')}`;
       octx.fillRect(0, 0, out.width, out.height);
-      octx.drawImage(img, minX, minY, cropW, cropH, 0, 0, out.width, out.height);
+      octx.drawImage(img, sx, sy, sw, sh, 0, 0, out.width, out.height);
 
       const tex = new THREE.CanvasTexture(out);
       tex.colorSpace = THREE.SRGBColorSpace;
@@ -181,11 +185,12 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
     scene.add(group);
 
     const disposableTex = [];
-    const fallbackHex = modelType === 'sack' ? 0xc59b6d : 0xe6cdb2;
+    const isBottle = modelType === 'bottle';
+    const fallbackHex = modelType === 'sack' ? 0xc59b6d : 0xdcc09b;
 
     Promise.all([
-      analyzeImageForMold(imageUrl, fallbackHex),
-      analyzeImageForMold(backImageUrl || imageUrl, fallbackHex)
+      analyzeImageForMold(imageUrl, fallbackHex, isBottle),
+      analyzeImageForMold(backImageUrl || imageUrl, fallbackHex, isBottle)
     ]).then(([frontData, backData]) => {
       const allTex = [frontData.tex, frontData.grainTex, backData.tex, backData.grainTex];
       if (disposed) {
@@ -276,33 +281,19 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
         cap.position.set(-0.34, 1.1, 0);
         group.add(cap);
 
-        const windowFrame = new THREE.Mesh(
-          new THREE.BoxGeometry(0.16, 1.05, 0.03),
-          new THREE.MeshStandardMaterial({ color: 0xcab094, roughness: 0.35 })
-        );
-        windowFrame.position.set(halfW - 0.24, -0.34, 0.355);
-        group.add(windowFrame);
-
-        const liquidStrip = new THREE.Mesh(
-          new THREE.BoxGeometry(0.11, 0.88, 0.035),
-          new THREE.MeshStandardMaterial({ color: 0x382419, roughness: 0.2, metalness: 0.1 })
-        );
-        liquidStrip.position.set(halfW - 0.24, -0.40, 0.36);
-        group.add(liquidStrip);
-
         const frontLabel = new THREE.Mesh(
-          new THREE.PlaneGeometry(halfW * 1.32, 1.42),
-          new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.55 })
+          new THREE.PlaneGeometry(halfW * 1.76, 1.56),
+          new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.5 })
         );
-        frontLabel.position.set(-0.14, -0.15, 0.366);
+        frontLabel.position.set(0, -0.18, 0.366);
         group.add(frontLabel);
 
         const backLabel = new THREE.Mesh(
-          new THREE.PlaneGeometry(halfW * 1.55, 1.48),
-          new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.55 })
+          new THREE.PlaneGeometry(halfW * 1.76, 1.56),
+          new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.5 })
         );
         backLabel.rotation.y = Math.PI;
-        backLabel.position.set(0, -0.15, -0.366);
+        backLabel.position.set(0, -0.18, -0.366);
         group.add(backLabel);
       }
     });

@@ -43,13 +43,14 @@
       "tag": "Presentación Líquida · Envase 1 L",
       "name": "Bioestimulante Líquido Orgánico (Biolixiviado)",
       "description": "Envase beige mate ergonómico con tapa de seguridad marrón y ranura lateral graduada (200–800 ml) para medir con precisión en campo.",
-      "image": "/assets/ecocaff-liquido.jpg",
+      "image": "/assets/ecocaff-liquido.png",
       "specs": [
         "Dilución recomendada: 1 a 2 litros por bomba de espalda de 20 L (mezcla al 5% – 10%).",
         "Modo de aplicación: Foliar sobre el follaje o en drench directo a la base del árbol.",
         "Complemento ideal: Refuerza la floración y el llenado de fruto junto al abono sólido."
       ],
-      "ingredients": "Lixiviado de café fermentado, Microorganismos nativos, Melaza activadora, Nutrientes solubles naturales"
+      "ingredients": "Lixiviado de café fermentado, Microorganismos nativos, Melaza activadora, Nutrientes solubles naturales",
+      "backImage": "/assets/ecocaff-liquido-back.png"
     }
   ],
   "guide": {
