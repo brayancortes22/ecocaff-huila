@@ -72,8 +72,8 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
       bagGeo.computeVertexNormals();
 
       const kraftMat = new THREE.MeshStandardMaterial({ color: 0xc59b6d, roughness: 0.85 });
-      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.65 });
-      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.65 });
+      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.65, transparent: true, alphaTest: 0.05 });
+      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.65, transparent: true, alphaTest: 0.05 });
       const bag = new THREE.Mesh(bagGeo, [kraftMat, kraftMat, kraftMat, kraftMat, frontLabelMat, backLabelMat]);
       group.add(bag);
 
@@ -153,14 +153,14 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
 
       // Etiqueta frontal plana (dejando espacio a la derecha para la ranura graduada)
       const frontLabelGeo = new THREE.PlaneGeometry(0.96, 1.42);
-      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.55 });
+      const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.55, transparent: true, alphaTest: 0.05 });
       const frontLabel = new THREE.Mesh(frontLabelGeo, frontLabelMat);
       frontLabel.position.set(-0.14, -0.15, 0.366);
       group.add(frontLabel);
 
       // Etiqueta trasera plana
       const backLabelGeo = new THREE.PlaneGeometry(1.12, 1.48);
-      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.55 });
+      const backLabelMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.55, transparent: true, alphaTest: 0.05 });
       const backLabel = new THREE.Mesh(backLabelGeo, backLabelMat);
       backLabel.rotation.y = Math.PI;
       backLabel.position.set(0, -0.15, -0.366);

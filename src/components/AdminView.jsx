@@ -32,7 +32,8 @@ function compressImageFile(file, maxWidth = 900) {
         canvas.height = Math.round(img.height * scale);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.84));
+        const keepAlpha = file.type === 'image/png' || file.type === 'image/webp';
+        resolve(canvas.toDataURL(keepAlpha ? 'image/webp' : 'image/jpeg', keepAlpha ? 0.9 : 0.84));
       };
       img.onerror = reject;
       img.src = reader.result;
