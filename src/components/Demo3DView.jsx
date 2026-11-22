@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Box, Rotate3d } from 'lucide-react';
+import { Box, Rotate3d, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
   const mountRef = useRef(null);
+  const controlsRef = useRef(null);
+  const cameraRef = useRef(null);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -18,6 +20,7 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
 
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(0, 0.35, 4.1);
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
@@ -27,9 +30,12 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.enableZoom = false;
+    controls.enableZoom = true;
+    controls.minDistance = 2.0;
+    controls.maxDistance = 6.5;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 1.4;
+    controlsRef.current = controls;
 
     const ambient = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambient);
@@ -188,19 +194,78 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
     };
   }, [modelType, imageUrl, backImageUrl]);
 
+  const handleZoom = (factor) => {
+    const cam = cameraRef.current;
+    const ctrl = controlsRef.current;
+    if (!cam || !ctrl) return;
+    const dir = cam.position.clone().sub(ctrl.target);
+    const nextDist = THREE.MathUtils.clamp(dir.length() * factor, 2.0, 6.5);
+    dir.setLength(nextDist);
+    cam.position.copy(ctrl.target).add(dir);
+    ctrl.update();
+  };
+
+  const handleReset = () => {
+    const cam = cameraRef.current;
+    const ctrl = controlsRef.current;
+    if (!cam || !ctrl) return;
+    cam.position.set(0, 0.35, 4.1);
+    ctrl.target.set(0, 0, 0);
+    ctrl.update();
+  };
+
   return (
-    <div
-      ref={mountRef}
-      style={{
-        width: '100%',
-        height: '420px',
-        borderRadius: '14px',
-        overflow: 'hidden',
-        cursor: 'grab',
-        border: '1px solid var(--border)'
-      }}
-      aria-label="Visor 3D interactivo 360 grados"
-    />
+    <div style={{ position: 'relative' }}>
+      <div
+        ref={mountRef}
+        style={{
+          width: '100%',
+          height: '420px',
+          borderRadius: '14px',
+          overflow: 'hidden',
+          cursor: 'grab',
+          border: '1px solid var(--border)'
+        }}
+        aria-label="Visor 3D interactivo 360 grados con zoom"
+      />
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '12px',
+          right: '12px',
+          display: 'flex',
+          gap: '8px'
+        }}
+      >
+        <button
+          type="button"
+          className="tour-btn"
+          onClick={() => handleZoom(0.8)}
+          aria-label="Acercar zoom 3D"
+          style={{ minHeight: '44px', minWidth: '44px', padding: '0 12px' }}
+        >
+          <ZoomIn size={18} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="tour-btn"
+          onClick={() => handleZoom(1.25)}
+          aria-label="Alejar zoom 3D"
+          style={{ minHeight: '44px', minWidth: '44px', padding: '0 12px' }}
+        >
+          <ZoomOut size={18} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="tour-btn"
+          onClick={handleReset}
+          aria-label="Reiniciar vista 3D"
+          style={{ minHeight: '44px', minWidth: '44px', padding: '0 12px' }}
+        >
+          <RotateCcw size={18} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
   );
 }
 
