@@ -17,8 +17,9 @@ import GuideView from './components/GuideView';
 import OriginView from './components/OriginView';
 import QrShareModal from './components/QrShareModal';
 import AdminView from './components/AdminView';
+import Demo3DView from './components/Demo3DView';
 
-const VALID_VIEWS = ['inicio', 'calculadora', 'productos', 'guia', 'origen', 'admin'];
+const VALID_VIEWS = ['inicio', 'calculadora', 'productos', 'guia', 'origen', 'admin', 'demo-3d'];
 
 const DEFAULT_CATALOG = {
   site: {
@@ -428,9 +429,10 @@ export default function App() {
         )}
 
         {view === 'calculadora' && <CalculatorView whatsapp={catalog.site.whatsapp} config={catalog.calculator} />}
-        {view === 'productos' && <ProductsView catalog={catalog} />}
+        {view === 'productos' && <ProductsView catalog={catalog} onNavigate={navigateTo} />}
         {view === 'guia' && <GuideView guide={catalog.guide} />}
         {view === 'origen' && <OriginView site={catalog.site} origin={catalog.origin} onNavigate={navigateTo} onOpenQr={() => setQrOpen(true)} />}
+        {view === 'demo-3d' && <Demo3DView catalog={catalog} onNavigate={navigateTo} />}
         {view === 'admin' && (
           <AdminView
             catalog={catalog}

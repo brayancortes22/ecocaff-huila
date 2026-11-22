@@ -1,7 +1,7 @@
 import React from 'react';
-import { Package, Check } from 'lucide-react';
+import { Package, Check, Rotate3d } from 'lucide-react';
 
-export default function ProductsView({ catalog }) {
+export default function ProductsView({ catalog, onNavigate }) {
   const products = Array.isArray(catalog?.products) ? catalog.products : [];
 
   return (
@@ -15,6 +15,17 @@ export default function ProductsView({ catalog }) {
             </span>
             <h1>Dos líneas diseñadas para la economía circular del café</h1>
             <p>Transformamos la pulpa y subproductos del beneficio del café en Algeciras en nutrición viva, estandarizada y fácil de transportar en ladera.</p>
+            {onNavigate && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => onNavigate('demo-3d')}
+                style={{ marginTop: '16px' }}
+              >
+                <Rotate3d size={18} aria-hidden="true" />
+                Ver comparativa en 3D (Modo A vs Modo B)
+              </button>
+            )}
           </div>
 
           <div className="products-grid">
