@@ -3,6 +3,17 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Box, Rotate3d, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
+function makeEdgeStripTexture(srcCanvas, sx, sy, sw, sh, outW = 128, outH = 512) {
+  const c = document.createElement('canvas');
+  c.width = outW;
+  c.height = outH;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(srcCanvas, sx, sy, Math.max(1, sw), Math.max(1, sh), 0, 0, outW, outH);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 function analyzeImageForMold(url, fallbackColor) {
   return new Promise((resolve) => {
     const img = new Image();
@@ -30,16 +41,25 @@ function analyzeImageForMold(url, fallbackColor) {
         for (let y = 0; y < h; y += 2) {
           for (let x = 0; x < w; x += 2) {
             const idx = (y * w + x) * 4;
-            const a = data[idx + 3];
-            if (a > 24) {
+            if (data[idx + 3] > 24) {
               if (x < minX) minX = x;
               if (x > maxX) maxX = x;
               if (y < minY) minY = y;
               if (y > maxY) maxY = y;
-              rSum += data[idx];
-              gSum += data[idx + 1];
-              bSum += data[idx + 2];
-              count++;
+            }
+          }
+        }
+        if (maxX > minX && maxY > minY) {
+          // Sample perimeter pixels (the actual packaging material, avoiding dark center text)
+          for (let y = minY; y <= maxY; y += 3) {
+            for (const x of [Math.min(maxX, minX + 6), Math.max(minX, maxX - 6)]) {
+              const idx = (y * w + x) * 4;
+              if (data[idx + 3] > 24) {
+                rSum += data[idx];
+                gSum += data[idx + 1];
+                bSum += data[idx + 2];
+                count++;
+              }
             }
           }
         }
@@ -61,7 +81,7 @@ function analyzeImageForMold(url, fallbackColor) {
       const cropH = Math.max(1, maxY - minY + 1);
       const aspect = Math.min(1.35, Math.max(0.45, cropW / cropH));
 
-      const avgColor = count > 0
+      const edgeColor = count > 0
         ? (Math.round(rSum / count) << 16) | (Math.round(gSum / count) << 8) | Math.round(bSum / count)
         : fallbackColor;
 
@@ -69,13 +89,21 @@ function analyzeImageForMold(url, fallbackColor) {
       out.width = 768;
       out.height = Math.round(768 / aspect);
       const octx = out.getContext('2d');
-      octx.fillStyle = `#${avgColor.toString(16).padStart(6, '0')}`;
+      octx.fillStyle = `#${edgeColor.toString(16).padStart(6, '0')}`;
       octx.fillRect(0, 0, out.width, out.height);
       octx.drawImage(img, minX, minY, cropW, cropH, 0, 0, out.width, out.height);
 
       const tex = new THREE.CanvasTexture(out);
       tex.colorSpace = THREE.SRGBColorSpace;
-      resolve({ tex, aspect, avgColor });
+
+      const stripW = Math.max(8, Math.round(out.width * 0.06));
+      const stripH = Math.max(8, Math.round(out.height * 0.04));
+      const leftTex = makeEdgeStripTexture(out, 2, 0, stripW, out.height, 128, 512);
+      const rightTex = makeEdgeStripTexture(out, out.width - stripW - 2, 0, stripW, out.height, 128, 512);
+      const topTex = makeEdgeStripTexture(out, 0, 2, out.width, stripH, 512, 128);
+      const bottomTex = makeEdgeStripTexture(out, 0, out.height - stripH - 2, out.width, stripH, 512, 128);
+
+      resolve({ tex, leftTex, rightTex, topTex, bottomTex, aspect, edgeColor });
     };
     img.onerror = () => {
       const fallbackCanvas = document.createElement('canvas');
@@ -85,7 +113,7 @@ function analyzeImageForMold(url, fallbackColor) {
       fctx.fillStyle = `#${fallbackColor.toString(16).padStart(6, '0')}`;
       fctx.fillRect(0, 0, 256, 340);
       const tex = new THREE.CanvasTexture(fallbackCanvas);
-      resolve({ tex, aspect: 0.72, avgColor: fallbackColor });
+      resolve({ tex, leftTex: tex, rightTex: tex, topTex: tex, bottomTex: tex, aspect: 0.72, edgeColor: fallbackColor });
     };
     img.src = url;
   });
@@ -141,54 +169,63 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
     const group = new THREE.Group();
     scene.add(group);
 
-    let frontTexRef = null;
-    let backTexRef = null;
-
+    const disposableTex = [];
     const fallbackHex = modelType === 'sack' ? 0xc59b6d : 0xe6cdb2;
 
     Promise.all([
       analyzeImageForMold(imageUrl, fallbackHex),
       analyzeImageForMold(backImageUrl || imageUrl, fallbackHex)
     ]).then(([frontData, backData]) => {
+      const allTex = [
+        frontData.tex, frontData.leftTex, frontData.rightTex, frontData.topTex, frontData.bottomTex,
+        backData.tex, backData.leftTex, backData.rightTex, backData.topTex, backData.bottomTex
+      ];
       if (disposed) {
-        frontData.tex.dispose();
-        backData.tex.dispose();
+        allTex.forEach((t) => t.dispose());
         return;
       }
-
-      frontTexRef = frontData.tex;
-      backTexRef = backData.tex;
+      disposableTex.push(...allTex);
 
       const moldH = 2.15;
       const moldW = moldH * frontData.aspect;
-      const sideColor = frontData.avgColor;
+      const depth = Math.max(0.48, moldW * 0.38);
 
       if (modelType === 'sack') {
-        const bagGeo = new THREE.BoxGeometry(moldW, moldH, 0.62, 12, 16, 6);
+        const bagGeo = new THREE.BoxGeometry(moldW, moldH, depth, 14, 18, 8);
         const pos = bagGeo.attributes.position;
         for (let i = 0; i < pos.count; i++) {
           const x = pos.getX(i);
           const y = pos.getY(i);
           const z = pos.getZ(i);
-          const belly = 1 - Math.pow(y / (moldH * 0.55), 2) * 0.22;
-          const roundX = 1 - Math.pow(x / (moldW * 0.6), 2) * 0.1;
+          const yNorm = y / (moldH * 0.5);
+          const belly = 1 - Math.pow(yNorm, 2) * 0.24;
+          const xNorm = x / (moldW * 0.5);
+          const roundX = 1 - Math.pow(xNorm, 2) * 0.12;
+          // Subtle inward gusset crease on the left/right side edges
+          const isSide = Math.abs(xNorm) > 0.92;
+          const gusset = isSide ? (1 - Math.pow(Math.abs(z) / (depth * 0.5), 1.5) * 0.04) : 1;
+          pos.setX(i, x * gusset);
           pos.setZ(i, z * belly * roundX * 1.12);
         }
         bagGeo.computeVertexNormals();
 
-        const kraftMat = new THREE.MeshStandardMaterial({ color: sideColor, roughness: 0.85 });
-        const frontLabelMat = new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.65 });
-        const backLabelMat = new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.65 });
-        const bag = new THREE.Mesh(bagGeo, [kraftMat, kraftMat, kraftMat, kraftMat, frontLabelMat, backLabelMat]);
-        group.add(bag);
+        const bagMats = [
+          new THREE.MeshStandardMaterial({ map: frontData.rightTex, roughness: 0.78 }), // +X right
+          new THREE.MeshStandardMaterial({ map: frontData.leftTex, roughness: 0.78 }),  // -X left
+          new THREE.MeshStandardMaterial({ map: frontData.topTex, roughness: 0.8 }),    // +Y top
+          new THREE.MeshStandardMaterial({ map: frontData.bottomTex, roughness: 0.85 }),// -Y bottom
+          new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.65 }),      // +Z front
+          new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.65 })        // -Z back
+        ];
+        group.add(new THREE.Mesh(bagGeo, bagMats));
 
-        const foldGeo = new THREE.BoxGeometry(moldW + 0.04, 0.12, 0.16);
-        const foldMat = new THREE.MeshStandardMaterial({ color: sideColor, roughness: 0.85 });
+        const foldGeo = new THREE.BoxGeometry(moldW + 0.03, 0.11, 0.14);
+        const foldMat = new THREE.MeshStandardMaterial({ map: frontData.topTex, roughness: 0.82 });
         const fold = new THREE.Mesh(foldGeo, foldMat);
-        fold.position.y = moldH / 2 + 0.04;
+        fold.position.y = moldH / 2 + 0.03;
         group.add(fold);
       } else {
-        const beigeMat = new THREE.MeshStandardMaterial({ color: 0xe6cdb2, roughness: 0.45, metalness: 0.04 });
+        const beigeMat = new THREE.MeshStandardMaterial({ color: frontData.edgeColor, roughness: 0.45, metalness: 0.04 });
         const halfW = Math.max(0.62, Math.min(0.82, moldW / 2));
 
         const jShape = new THREE.Shape();
@@ -290,8 +327,7 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
       controls.dispose();
-      if (frontTexRef) frontTexRef.dispose();
-      if (backTexRef) backTexRef.dispose();
+      disposableTex.forEach((t) => t.dispose());
       renderer.dispose();
     };
   }, [modelType, imageUrl, backImageUrl]);
@@ -393,7 +429,7 @@ export default function Demo3DView({ catalog, onNavigate }) {
               Visor 3D 360° (Arrastra para girar)
             </span>
             <h1>Explora los empaques de Ecocaff en 3D</h1>
-            <p>El molde 3D se ajusta automáticamente al tamaño y color de tu imagen. Arrastra para rotar 360° o usa el zoom.</p>
+            <p>El molde 3D y sus costados se ajustan automáticamente a la textura, tamaño y color de tu imagen.</p>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', marginBottom: '20px' }}>
