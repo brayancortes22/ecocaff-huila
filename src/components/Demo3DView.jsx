@@ -231,34 +231,34 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
         ];
         group.add(new THREE.Mesh(bagGeo, bagMats));
       } else {
-        const beigeMat = new THREE.MeshStandardMaterial({ color: frontData.edgeColor, roughness: 0.45, metalness: 0.04 });
-        const halfW = Math.max(0.62, Math.min(0.82, moldW / 2));
+        const beigeMat = new THREE.MeshStandardMaterial({ color: frontData.edgeColor, roughness: 0.48, metalness: 0.03 });
+        const halfW = 0.68;
 
         const jShape = new THREE.Shape();
         const r = 0.14;
-        jShape.moveTo(-halfW + r, -1.0);
-        jShape.lineTo(halfW - r, -1.0);
-        jShape.quadraticCurveTo(halfW, -1.0, halfW, -1.0 + r);
-        jShape.lineTo(halfW, 0.86);
-        jShape.quadraticCurveTo(halfW, 1.04, halfW - 0.2, 1.04);
-        jShape.lineTo(0.16, 1.04);
-        jShape.quadraticCurveTo(0.02, 1.04, -0.06, 0.90);
-        jShape.lineTo(-halfW + 0.16, 0.90);
-        jShape.quadraticCurveTo(-halfW, 0.90, -halfW, 0.74);
-        jShape.lineTo(-halfW, -1.0 + r);
-        jShape.quadraticCurveTo(-halfW, -1.0, -halfW + r, -1.0);
+        jShape.moveTo(-halfW + r, -1.04);
+        jShape.lineTo(halfW - r, -1.04);
+        jShape.quadraticCurveTo(halfW, -1.04, halfW, -1.04 + r);
+        jShape.lineTo(halfW, 0.82);
+        jShape.quadraticCurveTo(halfW, 1.04, halfW - 0.20, 1.04);
+        jShape.lineTo(0.08, 1.04);
+        jShape.quadraticCurveTo(-0.06, 1.04, -0.14, 0.84);
+        jShape.lineTo(-halfW + 0.16, 0.84);
+        jShape.quadraticCurveTo(-halfW, 0.84, -halfW, 0.68);
+        jShape.lineTo(-halfW, -1.04 + r);
+        jShape.quadraticCurveTo(-halfW, -1.04, -halfW + r, -1.04);
 
         const handleHole = new THREE.Path();
         const hr = 0.09;
-        handleHole.moveTo(0.18 + hr, 0.34);
-        handleHole.lineTo(halfW - 0.24 - hr, 0.34);
-        handleHole.quadraticCurveTo(halfW - 0.24, 0.34, halfW - 0.24, 0.34 + hr);
-        handleHole.lineTo(halfW - 0.24, 0.84 - hr);
-        handleHole.quadraticCurveTo(halfW - 0.24, 0.84, halfW - 0.24 - hr, 0.84);
-        handleHole.lineTo(0.18 + hr, 0.84);
-        handleHole.quadraticCurveTo(0.18, 0.84, 0.18, 0.84 - hr);
-        handleHole.lineTo(0.18, 0.34 + hr);
-        handleHole.quadraticCurveTo(0.18, 0.34, 0.18 + hr, 0.34);
+        handleHole.moveTo(0.08 + hr, 0.44);
+        handleHole.lineTo(halfW - 0.18 - hr, 0.44);
+        handleHole.quadraticCurveTo(halfW - 0.18, 0.44, halfW - 0.18, 0.44 + hr);
+        handleHole.lineTo(halfW - 0.18, 0.88 - hr);
+        handleHole.quadraticCurveTo(halfW - 0.18, 0.88, halfW - 0.18 - hr, 0.88);
+        handleHole.lineTo(0.08 + hr, 0.88);
+        handleHole.quadraticCurveTo(0.08, 0.88, 0.08, 0.88 - hr);
+        handleHole.lineTo(0.08, 0.44 + hr);
+        handleHole.quadraticCurveTo(0.08, 0.44, 0.08 + hr, 0.44);
         jShape.holes.push(handleHole);
 
         const extrudeGeo = new THREE.ExtrudeGeometry(jShape, {
@@ -266,34 +266,49 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
           bevelEnabled: true,
           bevelThickness: 0.08,
           bevelSize: 0.07,
-          bevelSegments: 5,
-          curveSegments: 16
+          bevelSegments: 6,
+          curveSegments: 18
         });
         extrudeGeo.translate(0, 0, -0.28);
         group.add(new THREE.Mesh(extrudeGeo, beigeMat));
 
-        const capMat = new THREE.MeshStandardMaterial({ color: 0x3b2314, roughness: 0.42 });
-        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.16, 0.1, 24), beigeMat);
-        neck.position.set(-0.34, 0.97, 0);
+        // Tapa rosca marrón oscura con relieve acanalado arriba a la izquierda
+        const capMat = new THREE.MeshStandardMaterial({ color: 0x3a2012, roughness: 0.38 });
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.15, 0.08, 24), beigeMat);
+        neck.position.set(-0.36, 0.90, 0);
         group.add(neck);
 
-        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.22, 24), capMat);
-        cap.position.set(-0.34, 1.1, 0);
+        const capRing = new THREE.Mesh(new THREE.CylinderGeometry(0.185, 0.185, 0.04, 24), capMat);
+        capRing.position.set(-0.36, 0.95, 0);
+        group.add(capRing);
+
+        const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.178, 0.19, 28), capMat);
+        cap.position.set(-0.36, 1.06, 0);
         group.add(cap);
 
+        // Relieve / hombro horizontal moldeado debajo del asa
+        const ribMat = new THREE.MeshStandardMaterial({ color: frontData.edgeColor, roughness: 0.55 });
+        const topRib = new THREE.Mesh(new THREE.BoxGeometry(halfW * 2.02, 0.045, 0.72), ribMat);
+        topRib.position.set(0, 0.34, 0);
+        group.add(topRib);
+
+        const botRib = new THREE.Mesh(new THREE.BoxGeometry(halfW * 2.02, 0.05, 0.72), ribMat);
+        botRib.position.set(0, -0.96, 0);
+        group.add(botRib);
+
         const frontLabel = new THREE.Mesh(
-          new THREE.PlaneGeometry(halfW * 1.76, 1.56),
-          new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.5 })
+          new THREE.PlaneGeometry(1.16, 1.24),
+          new THREE.MeshStandardMaterial({ map: frontData.tex, roughness: 0.52 })
         );
-        frontLabel.position.set(0, -0.18, 0.366);
+        frontLabel.position.set(0, -0.30, 0.366);
         group.add(frontLabel);
 
         const backLabel = new THREE.Mesh(
-          new THREE.PlaneGeometry(halfW * 1.76, 1.56),
-          new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.5 })
+          new THREE.PlaneGeometry(1.16, 1.24),
+          new THREE.MeshStandardMaterial({ map: backData.tex, roughness: 0.52 })
         );
         backLabel.rotation.y = Math.PI;
-        backLabel.position.set(0, -0.18, -0.366);
+        backLabel.position.set(0, -0.30, -0.366);
         group.add(backLabel);
       }
     });
