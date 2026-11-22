@@ -272,14 +272,14 @@ function ThreeCanvas({ modelType, imageUrl, backImageUrl }) {
 export default function Demo3DView({ catalog, onNavigate }) {
   const products = Array.isArray(catalog?.products) ? catalog.products : [];
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [useCleanDemo, setUseCleanDemo] = useState(true);
+  const [useCleanDemo, setUseCleanDemo] = useState(false);
   const current = products[selectedIndex] || products[0] || {};
   const activeModel = current.modelType || (selectedIndex === 1 ? 'bottle' : 'sack');
 
   const demoFront = activeModel === 'bottle' ? '/assets/demo/bottle-front.jpg' : '/assets/demo/sack-front.jpg';
   const demoBack = activeModel === 'bottle' ? '/assets/demo/bottle-back.jpg' : '/assets/demo/sack-back.jpg';
   const activeFront = useCleanDemo ? demoFront : (current.image || demoFront);
-  const activeBack = useCleanDemo ? demoBack : (current.backImage || activeFront);
+  const activeBack = useCleanDemo ? demoBack : (current.backImage || current.image || demoBack);
 
   return (
     <section id="view-demo-3d" className="view-page active" data-view="demo-3d">
@@ -312,11 +312,11 @@ export default function Demo3DView({ catalog, onNavigate }) {
 
             <button
               type="button"
-              className={`btn ${useCleanDemo ? 'btn-primary' : 'btn-secondary'}`}
+              className={`btn ${!useCleanDemo ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setUseCleanDemo((v) => !v)}
               style={{ minHeight: '44px', padding: '0 16px', fontSize: '0.84rem' }}
             >
-              {useCleanDemo ? 'Mostrando: Etiquetas limpias 3D' : 'Mostrando: Fotos del catálogo'}
+              {useCleanDemo ? 'Usando: Etiquetas de prueba (cambiar a catálogo)' : 'Usando: Fotos del catálogo / Admin'}
             </button>
           </div>
 
